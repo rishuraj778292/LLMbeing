@@ -1,5 +1,5 @@
 
-import Layout from "./layout/Layout"
+import PublicLayout from "./layout/PublicLayout"
 import Home from "./pages/Home"
 import { Route, Routes } from "react-router-dom"
 import Login from "./pages/authentication/Login"
@@ -13,7 +13,7 @@ function App() {
   return (
     <div >
       <Routes>
-        <Route element={<Layout />} >
+        <Route element={<PublicLayout />} >
           <Route path="/" element={<Home />} />
         </Route>
         <Route element={<AuthLayout />}>
