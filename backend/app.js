@@ -3,6 +3,8 @@ import  handleError  from './middleware/error.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 const app = express()
+import dotenv from 'dotenv'
+dotenv.config()
 
 app.use(express.json(
     // { limit: '16kb' }
@@ -22,6 +24,7 @@ import authRouter from './routes/auth.route.js';
 
 // routes decleration
 app.use("/api/v1/user",authRouter);
+
 
 // error handling
 app.use(handleError)

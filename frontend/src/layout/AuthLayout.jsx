@@ -1,8 +1,11 @@
 import React from 'react'
 import Navbar from '../components/Navbar'
-import { Outlet } from 'react-router-dom'
+import { Navigate,Outlet } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 
 const AuthLayout = () => {
+    const {isAuthenticated,loading} = useSelector((state)=>state.auth)
+    if(isAuthenticated) return <Navigate to="/dashboard"/>
     const isAuthPage = true;
   return (
        <div>

@@ -1,7 +1,7 @@
-import { mongoose } from 'mongoose'
+import mongoose  from 'mongoose'
 const { Schema } = mongoose
-import bcrypt from 'bcryptjs'
-
+import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
 const userSchema = new Schema({
     email: {
@@ -17,9 +17,8 @@ const userSchema = new Schema({
         type: String,
         required: true,
         minlength: 6,
-        maxlength: 32,
     },
-    username: {
+    userName: {
         type: String,
         required: true,
         unique: true,
@@ -27,7 +26,7 @@ const userSchema = new Schema({
         lowercase: true,
         index: true,
     },
-    fullname: {
+    fullName: {
         type: String,
         required: true,
         trim: true,
@@ -98,7 +97,7 @@ const userSchema = new Schema({
 
 );
 // hash password before saving
-userSchema.pre('save', async function (next)  {
+userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
     this.password = await bcrypt.hash(this.password, 10)
     next()
@@ -111,7 +110,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 }
 
 userSchema.methods.generateAcessToken = function () {
-    return Jwt.sign(
+    return jwt.sign(
         {
             _id: this._id,
             email: this.email,
@@ -124,14 +123,16 @@ userSchema.methods.generateAcessToken = function () {
     )
 }
 
-userSchema.methods.generateRefreshToken = function () {
+userSchema.methods.generateRefreshToken = function (remember) {
     return jwt.sign({
         _id: this.id
     },
         process.env.REFRESH_TOKEN_SECRET,
+        remember?
+        { expiresIn: process.env.REMEMBER_REFRESH_TOKEN_EXPIRY }
+        :
         { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
-
     )
 }
-
-export default user = mongoose.model('user', userSchema);
+const User = mongoose.model('user', userSchema);
+export default User

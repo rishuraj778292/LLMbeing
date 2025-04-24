@@ -1,5 +1,6 @@
 import React from 'react'
 
+
 const Footer = () => {
     return (
         <div className='bg-black text-white flex flex-col  px-30 py-10 border rounded-2xl  '>
@@ -15,7 +16,7 @@ const Footer = () => {
                     <a>About Us</a>
                     <a>Blog</a>
                     <a>Careers</a>
-                    <a href="">Contact us</a>
+                    <a href="/contactus">Contact us</a>
 
                 </div>
                 <div className='flex flex-col gap-0.5'>
