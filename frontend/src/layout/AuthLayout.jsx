@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux'
 
 const AuthLayout = () => {
     const {isAuthenticated,loading} = useSelector((state)=>state.auth)
+    
     if(isAuthenticated) return <Navigate to="/dashboard"/>
     const isAuthPage = true;
   return (

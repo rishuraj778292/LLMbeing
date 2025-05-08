@@ -4,7 +4,9 @@ import './index.css'
 import App from './App.jsx'
 import { store } from '../Redux/store.js'
 import { Provider } from 'react-redux'
+import { setStore } from '../UTILS/axiosInstance.js'
 
+setStore(store)
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <Provider store={store}>

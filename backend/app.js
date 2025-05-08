@@ -21,10 +21,13 @@ app.use(cors({
 
 // routes import
 import authRouter from './routes/auth.route.js';
+import projectRouter from './routes/project.route.js';
+import gigsRouter from './routes/gigs.route.js';
 
 // routes decleration
 app.use("/api/v1/user",authRouter);
-
+app.use("/api/v1/project",projectRouter);
+app.use("api/v1/gig",gigsRouter);
 
 // error handling
 app.use(handleError)

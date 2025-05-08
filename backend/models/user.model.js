@@ -89,6 +89,18 @@ const userSchema = new Schema({
         type: String,
         default: null,
     },
+    averageRating:{
+            type:Number,
+            default:0,
+    },
+    reviewCount:{
+        type:Number,
+        default:0,
+    },
+    savedProject:{
+        type:[Schema.Types.ObjectId],
+        default:[],
+    },
 
 
 }, {

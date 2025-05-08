@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import { assets } from '../../assets/assets';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../../../feature/auth/authSlice';
-import axios from 'axios';
+import { login } from '../../../Redux/Slice/authSlice';
+
 import { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+
+
 
 const fadeInUp = {
   initial: { y: 40, opacity: 0 },
@@ -24,47 +26,42 @@ const Login = () => {
   } = useForm();
 
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth.user);
+  const navigate = useNavigate();
+  const { user, status, error } = useSelector((state) => state.auth);
 
-  // Log the updated user whenever it changes
+  // Handle login results
   useEffect(() => {
-    if (user) {
+    if (status === "succeeded") {
       console.log("Updated user:", user);
+      navigate("/dashboard"); // navigate here
     }
-  }, [user]);
 
-  const setData = (response) => {
-    if (response.data.success) {
-      const userData = response.data.data.response;
-      dispatch(login(userData)); // Update Redux state
-    } else {
-      console.log("Login failed", response.data);
-    }
-  };
-
-  const onsubmit = async (data) => {
-    try {
-      const response = await axios.post("/api/v1/user/login", data);
-      console.log("response ", response);
-      setData(response);
-      <Navigate to="/dashboard"/>
-    } catch (error) {
-      console.log("err", error);
-      if (error.response?.data?.message === "Invalid Password") {
+    if (status === "failed") {
+      if (error === "Invalid Password") {
         setError("password", {
           type: "manual",
           message: "Invalid Password",
         });
-      } else if (error.response?.data?.message === "User not found") {
+      } else if (error === "User not found") {
         setError("emailOrUserName", {
           type: "manual",
           message: "User not found",
         });
       } else {
-        console.error("Unexpected error:", error.response?.data || error.message);
+        console.error("Unexpected error:", error);
       }
     }
-  };
+  }, [status, user, error, navigate, setError]);
+
+
+
+  const onsubmit = async (data) => {
+    console.log("this is data", data)
+    dispatch(login(data));
+
+
+  }
+
 
   return (
     <div className='min-h-screen bg-gray-50 flex flex-col'>
@@ -124,8 +121,9 @@ const Login = () => {
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   {...fadeInUp}
                   className='bg-blue-500 text-white rounded-md py-2 hover:bg-blue-600 w-full'
+                  type='submit'
                 >
-                  Continue
+                  {status === "loading" ? "Logging in..." : "Continue"}
                 </motion.button>
               </form>
 

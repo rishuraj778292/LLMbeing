@@ -1,12 +1,13 @@
 
 import Footer from "../components/Footer"
 import Navbar from "../components/Navbar"
-import { Outlet } from 'react-router-dom'
+import { Outlet,Navigate } from 'react-router-dom'
 import { useSelector } from "react-redux"
+
 const PublicLayout = () => {
-    const {isAuthenticated,loading} = useSelector((state)=>state.auth)
+    const {isAuthenticated,status} = useSelector((state)=>state.auth)
     if(isAuthenticated) return <Navigate to="/dashboard"/>
-    if(loading) return <div>Loading...</div>
+    if(status==="loading") return <div>Loading...</div>
     return (
         <div>
             <Navbar  />
