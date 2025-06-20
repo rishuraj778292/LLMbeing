@@ -222,6 +222,7 @@ const Navbar = ({ isAuthPage }) => {
                                     <div className="flex items-center space-x-6">
                                         <NavLink to="/dashboard" className={({ isActive }) => isActive ? activeClassName : "hover:text-indigo-600"}>Dashboard</NavLink>
                                         <NavLink to="/projects" className={({ isActive }) => isActive ? activeClassName : "hover:text-indigo-600"}>Your Projects</NavLink>
+                                        <NavLink to="/post-project" className={({ isActive }) => isActive ? activeClassName : "hover:text-indigo-600"}>Post Projects</NavLink>
                                         <NavLink to="/gigs" className={({ isActive }) => isActive ? activeClassName : "hover:text-indigo-600"}>gigs</NavLink>
                                         <NavLink to="/messages" className={({ isActive }) => isActive ? activeClassName : "hover:text-indigo-600"}>Message</NavLink>
                                     </div>

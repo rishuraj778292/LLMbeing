@@ -4,14 +4,14 @@ import { Navigate,Outlet } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 
 const AuthLayout = () => {
-    const {isAuthenticated,loading} = useSelector((state)=>state.auth)
+    const {isAuthenticated} = useSelector((state)=>state.auth)
     
     if(isAuthenticated) return <Navigate to="/dashboard"/>
     const isAuthPage = true;
   return (
        <div>
           <Navbar isAuthPage={isAuthPage}/>
-      <main>
+      <main className='md:overflow-hidden h-screen'>
          <Outlet/>
       </main>
        </div>

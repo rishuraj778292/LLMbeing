@@ -3,14 +3,29 @@ import User from "./user.model.js";
 const { Schema } = mongoose;
 
 // Allowed categories
-const allowedCategories = [
-  "AI Agents (Chatbots, GPT bots)",
-  "Automation (Make.com, Zapier)",
-  "LLM Apps (OpenAI, Claude, Gemini)",
-  "API Integrations",
-  "Prompt Engineering",
-  "Data Labeling & Analytics"
+const project_categories = [
+  'ai_chatbots',
+  'prompt_engineering',
+  'process_automation',
+  'api_integration',
+  'document_processing',
+  'search_analytics',
+  'nlp_classification',
+  'business_intelligence',
+  'data_labeling',
+  'research_legal_ai',
+  'media_production',
+  'voice_technology',
+  'translation_localization',
+  'generative_design',
+  'content_marketing',
+  'product_development',
+  'edtech_solutions',
+  'ai_consulting',
+  'security_compliance'
 ];
+
+
 
 const projectSchema = new Schema({
   title: {
@@ -25,10 +40,9 @@ const projectSchema = new Schema({
     required: [true, "Project description is required"],
     minlength: [10, "Description must be at least 10 characters long"]
   },
-  price: {
-    type: Number,
-    required: [true, "Price is required"],
-    min: [0, "Price cannot be negative"]
+  budget: {
+    type: String,
+    enum:['0k to 10k', '10k to 20k','20k to 30k','30k-40k','40k-50k','Above 50k'],
   },
   currency: {
     type: String,
@@ -42,20 +56,17 @@ const projectSchema = new Schema({
   },
   projectType: {
     type: String,
-    enum: ['one_time', 'hourly', 'monthly'],
+    enum: ['one_time', 'hourly', 'monthly','ongoing'],
     required: [true, "Project Type is required"]
   },
   projectCategory: {
     type: [String],
     required: [true, "Project category is required"],
-    validate: {
-      validator: (val) => val.every(cat => allowedCategories.includes(cat)),
-      message: "Invalid project category"
-    }
+    enum:project_categories,
   },
   projectStatus: {
     type: String,
-    enum: ["completed", "pending"],
+    enum: ["completed", "pending","interviewing"],
     default: "pending"
   },
   skillsRequired: {

@@ -1,10 +1,10 @@
-
 import { useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchProjects } from '../../../Redux/Slice/projectSlice';
+import { fetchProjects } from '../../../../Redux/Slice/projectSlice';
+import ProjectCard from '../../../components/projects/ProjectCard'
+import FilterSidebar from '../../../components/projects/FilterSidebar';
 
-import Projectbar from '../../components/projects/Projectbar';
-const Project = () => {
+const BrowseProjects = () => {
   const dispatch = useDispatch();
   const { projects, page, totalPages, status, loadingMore } = useSelector((state) => state.projects);
   const observer = useRef();
@@ -36,31 +36,33 @@ const Project = () => {
   }, [dispatch]);
 
   return (
-    <div className='flex flex-col gap-5'>
-       <Projectbar/>
-      <div className='flex flex-row gap-19'>
-        <div className='w-full flex flex-col gap-5'>
-          {status === 'loading' && <p>Loading initial projects...</p>}
 
-          {projects.map((project, idx) => (
-            <div
-              ref={idx === projects.length - 1 ? lastProjectRef : null} // Assign lastProjectRef to the last item
-              key={project._id}
-              className='p-5  border border-gray-300'
-            >
-              <h3>{project.title}</h3>
-              <p>{project.description}</p>
-            </div>
-          ))}
 
-          {loadingMore && <p>Loading more projects...</p>} {/* Show loading state when fetching more */}
-        </div>
-        <div className='h-100 w-1/3 border'>
+    <div className='flex flex-row gap-19 pt-10'>
+      <div className='w-full flex flex-col gap-5'>
+        {status === 'loading' && <p>Loading initial projects...</p>}
 
-        </div>
+        {projects.map((project, idx) => (
+          <ProjectCard
+          project = {project}
+          ref={idx === projects.length - 1 ? lastProjectRef : null} // Assign lastProjectRef to the last item
+          />
+          // <div
+          //   ref={idx === projects.length - 1 ? lastProjectRef : null} // Assign lastProjectRef to the last item
+          //   key={project._id}
+          //   className='p-5  border border-gray-300'
+          // >
+          //   <h3>{project.title}</h3>
+          //   <p>{project.description}</p>
+          // </div>
+        ))}
+
+        {loadingMore && <p>Loading more projects...</p>} {/* Show loading state when fetching more */}
       </div>
+       <FilterSidebar/>
     </div>
-  );
-};
 
-export default Project;
+  )
+}
+
+export default BrowseProjects

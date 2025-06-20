@@ -37,8 +37,8 @@ const validateProjectdata = asyncHandler((req, res, next) => {
     if (description.length < 10) throw new ApiError(400, "Description must be at least 5 characters long")
 
     // price handle 
-   let  price = projectdata.price;
-    if (!price || price === null) throw new ApiError(400, "Price is required");
+   let  budget = projectdata.budget;
+    if (!budget || budget === null) throw new ApiError(400, "Budget is required");
 
     //experienceLevel handle
     let experienceLevel = projectdata.experienceLevel;
