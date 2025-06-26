@@ -11,7 +11,7 @@ const AuthLayout = () => {
   return (
        <div>
           <Navbar isAuthPage={isAuthPage}/>
-      <main className='md:overflow-hidden h-screen'>
+      <main >
          <Outlet/>
       </main>
        </div>

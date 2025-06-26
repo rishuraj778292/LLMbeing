@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProjects } from '../../../../Redux/Slice/projectSlice';
 import ProjectCard from '../../../components/projects/ProjectCard'
-import FilterSidebar from '../../../components/projects/FilterSidebar';
+import ProjectFilterSidebar from '../../../components/projects/ProjectFilterSidebar';
 
 const BrowseProjects = () => {
   const dispatch = useDispatch();
@@ -39,6 +39,9 @@ const BrowseProjects = () => {
 
 
     <div className='flex flex-row gap-19 pt-10'>
+      <div>
+          <ProjectFilterSidebar/>
+      </div>
       <div className='w-full flex flex-col gap-5'>
         {status === 'loading' && <p>Loading initial projects...</p>}
 
@@ -59,7 +62,7 @@ const BrowseProjects = () => {
 
         {loadingMore && <p>Loading more projects...</p>} {/* Show loading state when fetching more */}
       </div>
-       <FilterSidebar/>
+      
     </div>
 
   )

@@ -5,7 +5,7 @@ import apple_icon from './apple-logo.png'
 import success from './success.png'
 import admin_icon from './admin_icon.png'
 import devloper_icon from './devloper_icon.png'
-import hero_img from './hero_img.png'
+import hero_image from './hero_image.jpg'
 import freelanceillustration from './freelanceillusrtation.svg'
 import search_icon from './search_icon.png'
 import user_icon from './user_icon.png'
@@ -21,7 +21,7 @@ export const assets={
     success_icon:success,
     admin_icon:admin_icon,
     devloper_icon:devloper_icon,
-    hero_img:hero_img,
+    hero_img:hero_image,
     freelanceillustration:freelanceillustration,
     search_icon:search_icon,
     user_icon:user_icon,

@@ -16,7 +16,7 @@ const ProtectedLayout = () => {
         <div className="flex flex-col h-screen">
             {/* Navbar fixed at top */}
             <Navbar />
-            <main className="bg-white px-20 pt-25">
+            <main>
                 <Outlet />
             </main>
         </div>

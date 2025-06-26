@@ -239,9 +239,10 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50 font-sans">
-      {/* Left side - Image and intro text */}
-      <div className="md:w-5/12 bg-indigo-900 bg-gradient-to-br from-indigo-800 to-indigo-900 text-white flex flex-col justify-center p-8 md:p-12 pt-20">
+    <div className='min-h-screen min-w-screen  md:px-10   md:flex md:items-center md:justify-center  ' >
+     <div className=" h-full w-full flex flex-col md:flex-row bg it-gray-50 font-sans border rounded-2xl">
+       {/* Left side - Image and intro text */}
+      <div className="md:w-5/12 bg-indigo-900 bg-gradient-to-br from-indigo-800 to-indigo-900 text-white flex flex-col justify-center p-8 md:p-12 pt-20 md:rounded-l-2xl">
         <div className="max-w-md mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Welcome back to LLMbeing</h1>
           <p className="text-lg mb-8 text-indigo-100">Connect with your freelance community and manage your projects.</p>
@@ -281,7 +282,7 @@ const Login = () => {
       </div>
 
       {/* Right side - Login form */}
-      <div className="md:w-7/12 bg-white p-8 md:p-12 flex items-center">
+      <div className="md:w-7/12 bg-white p-8 md:p-12 flex items-center md:rounded-r-2xl">
         <div className="w-full max-w-md mx-auto">
           <div className="text-center md:text-left mb-8">
             <h2 className="text-2xl font-bold text-gray-800">Log in to your account</h2>
@@ -417,6 +418,7 @@ const Login = () => {
           </div>
         </div>
       </div>
+     </div>
     </div>
   );
 };

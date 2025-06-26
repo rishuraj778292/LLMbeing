@@ -1,8 +1,8 @@
-import React from 'react'
+
 import Hero from '../components/HomepageSection/Hero'
 import GameChangerSection from '../components/HomepageSection/GameChangerSection'
 import ExploreCategories from '../components/HomepageSection/ExploreCategories'
-import HowItWork from '../components/HomepageSection/HowItWork'
+import HowItWorks from '../components/HomepageSection/HowItWorks'
 import LiveProject from '../components/HomepageSection/LiveProject'
 import ChooseUs from '../components/HomepageSection/ChooseUs'
 import Testimonial from '../components/HomepageSection/Testimonial'
@@ -23,10 +23,10 @@ const Home = () => {
       <ExploreCategories />
 
       { /* How It Works Section */}
-      <HowItWork />
+      <HowItWorks />
 
       {/* Live Projects Section */}
-      <LiveProject />
+      {/* <LiveProject /> */}
       { /* Why Choose Us Section */}
 
       <ChooseUs />

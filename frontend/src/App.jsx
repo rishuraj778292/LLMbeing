@@ -14,7 +14,6 @@ import Dashboard from "./pages/protectedPages/Dashboard"
 import Messages from "./pages/protectedPages/Messages"
 import Gigs from "./pages/protectedPages/Gigs"
 import Profile from "./pages/protectedPages/Profile"
-import ContactUs from "./pages/ContactUs"
 import { useSelector, useDispatch } from "react-redux"
 import { verifyme } from "../Redux/Slice/authSlice"
 import Accountsetting from "./pages/protectedPages/Accountsetting"
@@ -25,7 +24,10 @@ import AppliedProjects from "./pages/protectedPages/projectsPages/AppliedProject
 import CurrentProjects from "./pages/protectedPages/projectsPages/CurrentProjects"
 import CompletedProjects from './pages/protectedPages/projectsPages/CompletedProjects'
 import ProjectPostingForm from "./pages/protectedPages/projectsPages/ProjectPostingForm"
-
+import ContactUs from "./pages/ContactUs"
+import AboutUs from "./pages/AboutUs"
+import PrivacyPolicy from "./pages/PrivacyPolicy"
+import TermsOfUsePage from "./pages/TermsOfUsePage"
 
 function App() {
   const dispatch = useDispatch();
@@ -47,11 +49,16 @@ function App() {
   return (
     <div >
       <Routes>
+         {/* for loggedin user and logged out both */}
+         <Route path="/contactus" element={<ContactUs />} />
+         <Route path="/about-us" element={<AboutUs />} />
+         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+         <Route path="/term-of-usage" element={<TermsOfUsePage />} />
         {/* public layout for unautrhencticate user */}
         <Route element={<PublicLayout />} >
           <Route path="/" element={<Home />} />
 
-          <Route path="/contactus" element={<ContactUs />} />
+         
 
         </Route>
 
@@ -73,7 +80,7 @@ function App() {
         </Route>
 
         <Route element={<AuthLayout />}>
-          <Route path="login" element={<Login />} />
+          <Route path="/login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
           <Route path="forgotpassword" element={<ForgotPassword />} />
         </Route>
