@@ -19,7 +19,7 @@ const Hero = () => {
       </div>
       
       {/* Content */}
-      <div className="relative z-10 flex h-full items-center justify-center px-4 sm:px-6 lg:px-8 pt-20">
+      <div className="relative z-10 flex h-full items-center justify-center px-4 sm:px-6 lg:px-8 ">
         <div className="max-w-7xl mx-auto text-center">
           {/* Main Headlines */}
           <div className="space-y-4 mb-8">

@@ -454,14 +454,14 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 import { Bell, ChevronDown, User, Settings, LogOut, Menu, X, MessageCircle, Briefcase, PlusCircle, FileText, Search } from 'lucide-react';
-import {logout} from '../../Redux/Slice/authSlice'
+import { logout } from '../../Redux/Slice/authSlice'
 
 const Navbar = ({ isAuthPage }) => {
     const dispatch = useDispatch();
     const { user, isAuthenticated } = useSelector((state) => state.auth);
     const [isAccountPanelExpanded, setIsAccountPanelExpanded] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [notifications, setNotifications] = useState(3); // Mock notification count
+    const [notifications] = useState(3); // Mock notification count
 
     // Close panels when clicking outside
     useEffect(() => {
@@ -498,7 +498,7 @@ const Navbar = ({ isAuthPage }) => {
     // Navigation items based on user role
     const getNavigationItems = () => {
         if (!isAuthenticated) return [];
-        
+
         const baseItems = [
             { path: '/dashboard', label: 'Dashboard', icon: <FileText className="w-4 h-4" /> },
             { path: '/messages', label: 'Messages', icon: <MessageCircle className="w-4 h-4" /> }
@@ -518,7 +518,7 @@ const Navbar = ({ isAuthPage }) => {
                 { path: '/find-talent', label: 'Find Talent', icon: <Search className="w-4 h-4" /> }
             ];
         }
-        
+
         return baseItems;
     };
 
@@ -549,10 +549,9 @@ const Navbar = ({ isAuthPage }) => {
                                                 key={item.path}
                                                 to={item.path}
                                                 className={({ isActive }) =>
-                                                    `flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                                        isActive
-                                                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                                                    `flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
+                                                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                                                     }`
                                                 }
                                             >
@@ -563,29 +562,37 @@ const Navbar = ({ isAuthPage }) => {
                                     ) : (
                                         <>
                                             <NavLink
-                                                to="/browse-talent"
+                                                to="/login"
                                                 className="text-slate-600 hover:text-slate-900 px-4 py-2 text-sm font-medium"
                                             >
-                                                Find Talent
+                                                Post AI works
                                             </NavLink>
                                             <NavLink
-                                                to="/how-it-works"
+                                                to="/login"
+                                                className="text-slate-600 hover:text-slate-900 px-4 py-2 text-sm font-medium"
+                                            >
+                                                Find AI Work
+                                            </NavLink>
+                                            <a
+                                                href="#howitworks"
                                                 className="text-slate-600 hover:text-slate-900 px-4 py-2 text-sm font-medium"
                                             >
                                                 How it Works
-                                            </NavLink>
+                                            </a>
                                             <NavLink
                                                 to="/pricing"
                                                 className="text-slate-600 hover:text-slate-900 px-4 py-2 text-sm font-medium"
                                             >
                                                 Pricing
                                             </NavLink>
+                                          
+                                           
+                                            
+                                            
                                         </>
                                     )}
                                 </div>
-
-                                {/* Right side - User controls or Auth buttons */}
-                                <div className='flex items-center space-x-4'>
+                                <div className='hidden md:flex items-center space-x-4'>
                                     {isAuthenticated ? (
                                         <>
                                             {/* Notifications */}
@@ -606,9 +613,9 @@ const Navbar = ({ isAuthPage }) => {
                                                 >
                                                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
                                                         {user?.profileImage ? (
-                                                            <img 
-                                                                src={user.profileImage} 
-                                                                alt="Profile" 
+                                                            <img
+                                                                src={user.profileImage}
+                                                                alt="Profile"
                                                                 className="w-8 h-8 rounded-full object-cover"
                                                             />
                                                         ) : (
@@ -636,9 +643,9 @@ const Navbar = ({ isAuthPage }) => {
                                                             <div className="flex items-center space-x-3">
                                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
                                                                     {user?.profileImage ? (
-                                                                        <img 
-                                                                            src={user.profileImage} 
-                                                                            alt="Profile" 
+                                                                        <img
+                                                                            src={user.profileImage}
+                                                                            alt="Profile"
                                                                             className="w-10 h-10 rounded-full object-cover"
                                                                         />
                                                                     ) : (
@@ -713,20 +720,18 @@ const Navbar = ({ isAuthPage }) => {
                                             </NavLink>
                                         </div>
                                     )}
-
-                                    {/* Mobile menu button */}
-                                    <div className='md:hidden hamburger'>
-                                        <button
-                                            onClick={toggleMobileMenu}
-                                            className='p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors'
-                                        >
-                                            {isMobileMenuOpen ? (
-                                                <X className="w-6 h-6" />
-                                            ) : (
-                                                <Menu className="w-6 h-6" />
-                                            )}
-                                        </button>
-                                    </div>
+                                </div>                                {/* Mobile menu button */}
+                                <div className='md:hidden hamburger'>
+                                    <button
+                                        onClick={toggleMobileMenu}
+                                        className='p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors'
+                                    >
+                                        {isMobileMenuOpen ? (
+                                            <X className="w-6 h-6" />
+                                        ) : (
+                                            <Menu className="w-6 h-6" />
+                                        )}
+                                    </button>
                                 </div>
                             </>
                         )}
@@ -745,10 +750,9 @@ const Navbar = ({ isAuthPage }) => {
                                             key={item.path}
                                             to={item.path}
                                             className={({ isActive }) =>
-                                                `flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                                    isActive
-                                                        ? 'bg-blue-50 text-blue-700'
-                                                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                                                `flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
+                                                    ? 'bg-blue-50 text-blue-700'
+                                                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                                                 }`
                                             }
                                             onClick={() => setIsMobileMenuOpen(false)}
@@ -788,19 +792,26 @@ const Navbar = ({ isAuthPage }) => {
                             ) : (
                                 <>
                                     <NavLink
-                                        to="/browse-talent"
+                                        to="/login"
                                         className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
-                                        Find Talent
+                                        Post AI work
                                     </NavLink>
                                     <NavLink
-                                        to="/how-it-works"
+                                        to="/login"
+                                        className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Find AI works
+                                    </NavLink>
+                                    <a
+                                        href="#howitworks"
                                         className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
                                         How it Works
-                                    </NavLink>
+                                    </a>
                                     <NavLink
                                         to="/pricing"
                                         className="block px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
@@ -830,7 +841,7 @@ const Navbar = ({ isAuthPage }) => {
                     </div>
                 )}
             </nav>
-            
+
             {/* Spacer to prevent content from being hidden behind fixed navbar */}
             <div className="h-16"></div>
         </>

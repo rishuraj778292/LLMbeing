@@ -239,7 +239,7 @@ const Login = () => {
   };
 
   return (
-    <div className='min-h-screen min-w-screen  md:px-10   md:flex md:items-center md:justify-center  ' >
+    <div className='min-h-screen min-w-screen  md:px-10   md:flex md:items-center md:justify-center ' >
      <div className=" h-full w-full flex flex-col md:flex-row bg it-gray-50 font-sans border rounded-2xl">
        {/* Left side - Image and intro text */}
       <div className="md:w-5/12 bg-indigo-900 bg-gradient-to-br from-indigo-800 to-indigo-900 text-white flex flex-col justify-center p-8 md:p-12 pt-20 md:rounded-l-2xl">

@@ -61,7 +61,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="relative py-24 px-5 bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 overflow-hidden">
+    <section className="relative py-24 px-5 bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 overflow-hidden" id='howitworks'>
       {/* Enhanced Background Elements */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-slate-900/50 to-slate-950"></div>
       
