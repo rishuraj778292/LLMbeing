@@ -13,14 +13,13 @@ const ProtectedLayout = () => {
     if (loading) return <div>Loading...</div>;
 
     return (
-        <div className="flex flex-col h-screen">
+        <div className="min-h-screen bg-slate-50">
             {/* Navbar fixed at top */}
             <Navbar />
-            <main className="flex-1 overflow-hidden">
+            <main className="min-h-[calc(100vh-4rem)] overflow-auto">
                 <Outlet />
             </main>
         </div>
-
     );
 };
 

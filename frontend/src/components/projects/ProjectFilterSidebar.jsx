@@ -1,5 +1,5 @@
 
-import  { useState } from 'react';
+import { useState } from 'react';
 import { Search, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 const ProjectFilterSidebar = () => {
@@ -83,7 +83,7 @@ const ProjectFilterSidebar = () => {
       const newValues = filters[filterType].includes(value)
         ? filters[filterType].filter(item => item !== value)
         : [...filters[filterType], value];
-      
+
       setFilters(prev => ({
         ...prev,
         [filterType]: newValues
@@ -130,15 +130,15 @@ const ProjectFilterSidebar = () => {
   };
 
   const FilterSection = ({ title, isExpanded, onToggle, children }) => (
-    <div className="border-b border-gray-100 pb-4 mb-4">
+    <div className="border-b border-slate-100 pb-3">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full text-left font-medium text-gray-900 hover:text-blue-600 transition-colors"
+        className="flex items-center justify-between w-full text-left font-medium text-slate-900 hover:text-blue-600 transition-colors text-sm"
       >
         <span>{title}</span>
-        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
       </button>
-      {isExpanded && <div className="mt-3 space-y-2">{children}</div>}
+      {isExpanded && <div className="mt-2 space-y-2">{children}</div>}
     </div>
   );
 
@@ -148,22 +148,22 @@ const ProjectFilterSidebar = () => {
         type="checkbox"
         checked={checked}
         onChange={() => onChange(value)}
-        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+        className="w-3 h-3 text-blue-600 border-slate-300 rounded focus:ring-blue-500 focus:ring-1"
       />
-      <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+      <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
         {label}
       </span>
     </label>
   );
 
   return (
-    <div className="w-80 bg-white border rounded-2xl6 border-gray-200 h-screen overflow-y-auto">
+    <div className="bg-white border border-slate-200 rounded-lg h-fit sticky top-6">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-blue-50">
-        <div className="flex items-center justify-between mb-4">
+      <div className="p-4 border-b border-slate-200">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <Filter className="text-blue-600" size={20} />
-            <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+            <Filter className="text-blue-600" size={18} />
+            <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
           </div>
           {getActiveFilterCount() > 0 && (
             <div className="flex items-center space-x-2">
@@ -179,30 +179,18 @@ const ProjectFilterSidebar = () => {
             </div>
           )}
         </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-          <input
-            type="text"
-            placeholder="Search projects..."
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
       </div>
 
       {/* Filter Content */}
-      <div className="p-6 space-y-6">
+      <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
         {/* Project Category */}
         <FilterSection
           title="Project Category"
           isExpanded={expandedSections.category}
           onToggle={() => toggleSection('category')}
         >
-          <div className="max-h-48 overflow-y-auto space-y-2">
-            {projectCategories.map((category) => (
+          <div className="max-h-40 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-slate-300">
+            {projectCategories.slice(0, 8).map((category) => (
               <CheckboxOption
                 key={category.value}
                 value={category.value}
@@ -248,23 +236,6 @@ const ProjectFilterSidebar = () => {
           ))}
         </FilterSection>
 
-        {/* Project Status */}
-        <FilterSection
-          title="Project Status"
-          isExpanded={expandedSections.status}
-          onToggle={() => toggleSection('status')}
-        >
-          {projectStatuses.map((status) => (
-            <CheckboxOption
-              key={status.value}
-              value={status.value}
-              label={status.label}
-              checked={filters.projectStatus.includes(status.value)}
-              onChange={(value) => handleFilterChange('projectStatus', value)}
-            />
-          ))}
-        </FilterSection>
-
         {/* Budget Range */}
         <FilterSection
           title="Budget Range"
@@ -283,12 +254,12 @@ const ProjectFilterSidebar = () => {
         </FilterSection>
 
         {/* Currency */}
-        <div className="border-b border-gray-100 pb-4 mb-4">
-          <h3 className="font-medium text-gray-900 mb-3">Currency</h3>
+        <div className="border-b border-slate-100 pb-3">
+          <h3 className="font-medium text-slate-900 mb-2 text-sm">Currency</h3>
           <select
             value={filters.currency}
             onChange={(e) => handleFilterChange('currency', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {currencies.map((currency) => (
               <option key={currency.value} value={currency.value}>
@@ -300,27 +271,27 @@ const ProjectFilterSidebar = () => {
 
         {/* Skills Required */}
         <div>
-          <label className="block font-medium text-gray-900 mb-2">
+          <label className="block font-medium text-slate-900 mb-2 text-sm">
             Skills Required
           </label>
           <input
             type="text"
-            placeholder="Enter skills (comma separated)"
+            placeholder="e.g. React, Node.js, Python"
             value={filters.skillsRequired}
             onChange={(e) => handleFilterChange('skillsRequired', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Separate multiple skills with commas
           </p>
         </div>
       </div>
 
       {/* Apply Filters Button */}
-      <div className="p-6 border-t border-gray-200 bg-gray-50">
+      <div className="p-4 border-t border-slate-200">
         <button
           onClick={() => console.log('Applied filters:', filters)}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
         >
           Apply Filters
         </button>
