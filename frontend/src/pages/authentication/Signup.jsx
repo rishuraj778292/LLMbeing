@@ -170,8 +170,8 @@ const Signup = () => {
                   type="button"
                   onClick={() => setUserType('freelancer')}
                   className={`p-4 rounded-lg border-2 text-center transition-all ${userType === 'freelancer'
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                     }`}
                 >
                   <User className="w-6 h-6 mx-auto mb-2" />
@@ -184,8 +184,8 @@ const Signup = () => {
                   type="button"
                   onClick={() => setUserType('client')}
                   className={`p-4 rounded-lg border-2 text-center transition-all ${userType === 'client'
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                     }`}
                 >
                   <User className="w-6 h-6 mx-auto mb-2" />
