@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import ProfileCompletionBanner from '../../components/ProfileCompletionBanner';
 import {
   User,
   Search,
@@ -241,8 +242,8 @@ const Dashboard = () => {
         <h3 className="font-semibold text-gray-900 text-lg">{project.title}</h3>
         {isClient && (
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${project.status === 'Active' ? 'bg-green-100 text-green-800' :
-              project.status === 'In Review' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-gray-100 text-gray-800'
+            project.status === 'In Review' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-gray-100 text-gray-800'
             }`}>
             {project.status}
           </span>
@@ -355,6 +356,9 @@ const Dashboard = () => {
       {/* Header Section */}
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Profile Completion Banner */}
+          <ProfileCompletionBanner />
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-slate-900">
@@ -570,8 +574,8 @@ const Dashboard = () => {
                         <h4 className="font-semibold text-slate-900 text-base">{project.title}</h4>
                         {userType === 'client' && (
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${project.status === 'Active' ? 'bg-green-100 text-green-800' :
-                              project.status === 'In Review' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-slate-100 text-slate-800'
+                            project.status === 'In Review' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-slate-100 text-slate-800'
                             }`}>
                             {project.status}
                           </span>

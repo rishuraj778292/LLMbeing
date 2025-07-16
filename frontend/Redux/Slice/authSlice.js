@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../UTILS/axiosInstance';
 
+
 console.log('authSlice loaded');
 
 // Utility to extract error message
 const handleApiError = (error) => {
   const message = error.response?.data?.message || error.message || 'Something went wrong';
-  throw new Error(message);
+  return message; // Return the message instead of throwing
 };
 
 // ───── Async Thunks ─────
@@ -14,9 +15,12 @@ const handleApiError = (error) => {
 // Signup
 export const signup = createAsyncThunk('auth/signup', async (userData, thunkAPI) => {
   try {
-    const response = await axiosInstance.post('/api/v1/user/register', userData);
+    const response = await axiosInstance.post('/api/v1/user/register', userData, {
+      withCredentials: true,
+    });
     return response.data;
   } catch (error) {
+    console.log(error)
     return thunkAPI.rejectWithValue(handleApiError(error));
   }
 });
@@ -29,6 +33,7 @@ export const login = createAsyncThunk('auth/login', async (userCredentials, thun
     });
     return response.data.data.response;
   } catch (error) {
+    console.log(error)
     return thunkAPI.rejectWithValue(handleApiError(error));
   }
 });
@@ -98,6 +103,7 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.loginStatus = 'failed';
         state.loginError = action.payload;
+        console.log(action.payload)
         state.isAuthenticated = false;
       })
 

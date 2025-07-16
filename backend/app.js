@@ -1,5 +1,5 @@
 import express from 'express'
-import  handleError  from './middleware/error.js'
+import handleError from './middleware/error.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 const app = express()
@@ -23,11 +23,13 @@ app.use(cors({
 import authRouter from './routes/auth.route.js';
 import projectRouter from './routes/project.route.js';
 import gigsRouter from './routes/gigs.route.js';
+import profileRouter from './routes/profile.route.js';
 
 // routes decleration
-app.use("/api/v1/user",authRouter);
-app.use("/api/v1/project",projectRouter);
-app.use("api/v1/gig",gigsRouter);
+app.use("/api/v1/user", authRouter);
+app.use("/api/v1/user", profileRouter);
+app.use("/api/v1/project", projectRouter);
+app.use("/api/v1/gig", gigsRouter);
 
 // error handling
 app.use(handleError)

@@ -207,31 +207,39 @@ const Login = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, status, error } = useSelector((state) => state.auth);
+  const { user, loginStatus, loginError ,isAuthenticated} = useSelector((state) => state.auth);
 
   // Handle login results
   useEffect(() => {
-    if (status === "succeeded") {
+    if (isAuthenticated) {
       console.log("Updated user:", user);
-      navigate("/dashboard");
+      // Redirect based on user role
+      if (user?.role === 'client') {
+        navigate("/post-project");
+      } else if (user?.role === 'freelancer') {
+        navigate("/projects");
+      } else {
+        navigate("/projects");
+      }
     }
 
-    if (status === "failed") {
-      if (error === "Invalid Password") {
+    if (loginStatus === "failed") {
+      console.log(loginError)
+      if (loginError === "Invalid Password") {
         setError("password", {
           type: "manual",
           message: "Invalid Password",
         });
-      } else if (error === "User not found") {
+      } else if (loginError === "User not found") {
         setError("emailOrUserName", {
           type: "manual",
           message: "User not found",
         });
       } else {
-        console.error("Unexpected error:", error);
+        console.error("Unexpected error:", loginError);
       }
     }
-  }, [status, user, error, navigate, setError]);
+  }, [isAuthenticated, loginStatus, user, loginError, navigate, setError]);
 
   const onsubmit = async (data) => {
     console.log("this is data", data);

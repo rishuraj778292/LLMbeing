@@ -8,7 +8,7 @@ export const setStore = (_store) => {
   store = _store;
 }
 const axiosInstance = axios.create({
-  baseURL: '', // apna backend URL
+  baseURL: 'http://localhost:3300', // Direct connection to backend for testing
   withCredentials: true, // IMPORTANT: Cookies ko bhejne ke liye
 });
 
@@ -49,8 +49,8 @@ axiosInstance.interceptors.response.use(
 
       try {
         // Yahan refresh token call maarenge
-        await axiosInstance.get("api/v1/user/refreshtoken",{
-          withCredentials:true,
+        await axiosInstance.get("/api/v1/user/refreshtoken", {
+          withCredentials: true,
         });
 
         processQueue(null);

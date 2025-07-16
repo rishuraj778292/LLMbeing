@@ -9,7 +9,6 @@ import Signup from "./pages/authentication/Signup"
 import ForgotPassword from "./pages/authentication/ForgotPassword"
 import AuthLayout from "./layout/AuthLayout"
 import ProtectedLayout from "./layout/ProtectedLayout"
-import Dashboard from "./pages/protectedPages/Dashboard"
 
 import Messages from "./pages/protectedPages/Messages"
 import Gigs from "./pages/protectedPages/Gigs"
@@ -18,7 +17,7 @@ import { useSelector, useDispatch } from "react-redux"
 import { verifyme } from "../Redux/Slice/authSlice"
 import Accountsetting from "./pages/protectedPages/Accountsetting"
 import ProjectsLayout from "./pages/protectedPages/projectsPages/ProjectsLayout"
-import BrowseProjects from "./pages/protectedPages/projectsPages/BrowseProjects"
+import FindProjectsPage from "./pages/protectedPages/projectsPages/FindProjectsPage"
 import SavedProjects from "./pages/protectedPages/projectsPages/SavedProjects"
 import AppliedProjects from "./pages/protectedPages/projectsPages/AppliedProjects"
 import CurrentProjects from "./pages/protectedPages/projectsPages/CurrentProjects"
@@ -32,7 +31,7 @@ import TermsOfUsePage from "./pages/TermsOfUsePage"
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, status } = useSelector((state) => state.auth);
+  const { isAuthenticated, status, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(verifyme());
@@ -40,39 +39,46 @@ function App() {
 
   useEffect(() => {
     if (status === 'succeeded' && isAuthenticated) {
-      navigate("/dashboard");
+      // Redirect based on user role
+      if (user?.role === 'client') {
+        navigate("/post-project");
+      } else if (user?.role === 'freelancer') {
+        navigate("/projects");
+      } else {
+        navigate("/projects");
+      }
     }
-  }, [status, isAuthenticated, navigate]);
+  }, [status, isAuthenticated, user?.role, navigate]);
 
 
 
   return (
     <div >
       <Routes>
-         {/* for loggedin user and logged out both */}
-         <Route path="/contactus" element={<ContactUs />} />
-         <Route path="/about-us" element={<AboutUs />} />
-         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-         <Route path="/term-of-usage" element={<TermsOfUsePage />} />
+        {/* for loggedin user and logged out both */}
+        <Route path="/contactus" element={<ContactUs />} />
+        <Route path="/about-us" element={<AboutUs />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/term-of-usage" element={<TermsOfUsePage />} />
         {/* public layout for unautrhencticate user */}
         <Route element={<PublicLayout />} >
           <Route path="/" element={<Home />} />
 
-         
+
 
         </Route>
 
         <Route element={<ProtectedLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/account-setting" element={<Accountsetting />} />
-          <Route path="/projects" element={<ProjectsLayout />}>
-            <Route index element={<BrowseProjects />} />
+          <Route path="/projects" element={<FindProjectsPage />} />
+          <Route path="/manage-projects" element={<ProjectsLayout />}>
+            <Route index element={<CurrentProjects />} />
             <Route path="saved" element={<SavedProjects />} />
             <Route path="applied" element={<AppliedProjects />} />
             <Route path="current" element={<CurrentProjects />} />
             <Route path="completed" element={<CompletedProjects />} />
           </Route>
-          <Route path="/post-project" element={<ProjectPostingForm/>} />
+          <Route path="/post-project" element={<ProjectPostingForm />} />
           <Route path="/gigs" element={<Gigs />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/profile" element={<Profile />} />

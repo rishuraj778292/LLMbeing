@@ -1,4 +1,4 @@
-import mongoose  from 'mongoose'
+import mongoose from 'mongoose'
 const { Schema } = mongoose
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
@@ -42,7 +42,7 @@ const userSchema = new Schema({
         default: '',
     },
 
-    // freelancer specific
+    // Professional Information
     skills: {
         type: [String],
         default: [],
@@ -50,14 +50,165 @@ const userSchema = new Schema({
     bio: {
         type: String,
         maxlength: 1000,
-
     },
+    professionalTitle: {
+        type: String,
+        trim: true,
+        maxlength: 100,
+    },
+    hourlyRate: {
+        type: Number,
+        min: 0,
+    },
+
+    // Contact Information
+    phone: {
+        type: String,
+        trim: true,
+    },
+    country: {
+        type: String,
+        trim: true,
+    },
+    city: {
+        type: String,
+        trim: true,
+    },
+    website: {
+        type: String,
+        trim: true,
+    },
+
+    // Social Links
+    github: {
+        type: String,
+        trim: true,
+    },
+    linkedin: {
+        type: String,
+        trim: true,
+    },
+    twitter: {
+        type: String,
+        trim: true,
+    },
+
+    // Languages
+    languages: [{
+        name: {
+            type: String,
+            required: true,
+        },
+        level: {
+            type: String,
+            enum: ['Native', 'Fluent', 'Conversational', 'Basic'],
+            required: true,
+        }
+    }],
+
+    // Experience
+    experience: [{
+        jobTitle: {
+            type: String,
+            required: true,
+        },
+        company: {
+            type: String,
+            required: true,
+        },
+        startDate: {
+            type: Date,
+            required: true,
+        },
+        endDate: {
+            type: Date,
+        },
+        current: {
+            type: Boolean,
+            default: false,
+        },
+        description: {
+            type: String,
+            maxlength: 1000,
+        }
+    }],
+
+    // Education
+    education: [{
+        degree: {
+            type: String,
+            required: true,
+        },
+        institution: {
+            type: String,
+            required: true,
+        },
+        startYear: {
+            type: Number,
+            required: true,
+        },
+        endYear: {
+            type: Number,
+        },
+        grade: {
+            type: String,
+        }
+    }],
+
+    // Certifications
+    certifications: [{
+        name: {
+            type: String,
+            required: true,
+        },
+        issuer: {
+            type: String,
+            required: true,
+        },
+        year: {
+            type: Number,
+            required: true,
+        },
+        credentialId: {
+            type: String,
+        },
+        credentialUrl: {
+            type: String,
+        }
+    }],
+
+    // Portfolio/Projects
+    portfolio: [{
+        title: {
+            type: String,
+            required: true,
+        },
+        description: {
+            type: String,
+            required: true,
+        },
+        technologies: [String],
+        projectUrl: {
+            type: String,
+        },
+        githubUrl: {
+            type: String,
+        },
+        images: [String],
+        category: {
+            type: String,
+            enum: ['Client Project', 'Personal Project', 'Open Source', 'Freelance Work'],
+            default: 'Personal Project',
+        },
+        completedDate: {
+            type: Date,
+        }
+    }],
 
     // client specific
     accountType: {
         type: String,
         enum: ['individual', 'company'],
-
     },
     companyName: {
         type: String,
@@ -66,6 +217,36 @@ const userSchema = new Schema({
     companyCategory: {
         type: String,
         trim: true,
+    },
+
+    // Verification status
+    isEmailVerified: {
+        type: Boolean,
+        default: false,
+    },
+    isPhoneVerified: {
+        type: Boolean,
+        default: false,
+    },
+    isProfileVerified: {
+        type: Boolean,
+        default: false,
+    },
+
+    // Statistics
+    totalEarnings: {
+        type: Number,
+        default: 0,
+    },
+    completedProjects: {
+        type: Number,
+        default: 0,
+    },
+    successRate: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100,
     },
 
     // common meta fields
@@ -89,17 +270,23 @@ const userSchema = new Schema({
         type: String,
         default: null,
     },
-    averageRating:{
-            type:Number,
-            default:0,
+    averageRating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5,
     },
-    reviewCount:{
-        type:Number,
-        default:0,
+    reviewCount: {
+        type: Number,
+        default: 0,
     },
-    savedProject:{
-        type:[Schema.Types.ObjectId],
-        default:[],
+    totalReviews: {
+        type: Number,
+        default: 0,
+    },
+    savedProject: {
+        type: [Schema.Types.ObjectId],
+        default: [],
     },
 
 
@@ -140,10 +327,10 @@ userSchema.methods.generateRefreshToken = function (remember) {
         _id: this.id
     },
         process.env.REFRESH_TOKEN_SECRET,
-        remember?
-        { expiresIn: process.env.REMEMBER_REFRESH_TOKEN_EXPIRY }
-        :
-        { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+        remember ?
+            { expiresIn: process.env.REMEMBER_REFRESH_TOKEN_EXPIRY }
+            :
+            { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
     )
 }
 const User = mongoose.model('user', userSchema);
