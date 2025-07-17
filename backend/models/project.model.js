@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import User from "./user.model.js";
 const { Schema } = mongoose;
 
 // Allowed categories
@@ -42,7 +41,7 @@ const projectSchema = new Schema({
   },
   budget: {
     type: String,
-    enum:['0k to 10k', '10k to 20k','20k to 30k','30k-40k','40k-50k','Above 50k'],
+    enum: ['0k to 10k', '10k to 20k', '20k to 30k', '30k-40k', '40k-50k', 'Above 50k'],
   },
   currency: {
     type: String,
@@ -56,17 +55,17 @@ const projectSchema = new Schema({
   },
   projectType: {
     type: String,
-    enum: ['one_time', 'hourly', 'monthly','ongoing'],
+    enum: ['one_time', 'hourly', 'monthly', 'ongoing'],
     required: [true, "Project Type is required"]
   },
   projectCategory: {
     type: [String],
     required: [true, "Project category is required"],
-    enum:project_categories,
+    enum: project_categories,
   },
   projectStatus: {
     type: String,
-    enum: ["completed", "pending","interviewing"],
+    enum: ["completed", "pending", "interviewing"],
     default: "pending"
   },
   skillsRequired: {
@@ -87,7 +86,7 @@ const projectSchema = new Schema({
   },
   client: {
     type: Schema.Types.ObjectId,
-    ref: User,
+    ref: 'user',
     required: true
   },
   isActive: {
@@ -111,7 +110,7 @@ projectSchema.index({ projectStatues: 1 });
 
 
 // Optional: Auto-generate slug before saving
-projectSchema.pre('save', function(next) {
+projectSchema.pre('save', function (next) {
   if (!this.slug && this.title) {
     this.slug = this.title
       .toLowerCase()

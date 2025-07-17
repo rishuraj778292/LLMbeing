@@ -99,7 +99,7 @@ const Signup = () => {
               transition={{ duration: 2 }}
             />
           </div>
-          <p className="text-sm text-gray-500 mt-2">Redirecting to dashboard...</p>
+          <p className="text-sm text-gray-500 mt-2">Redirecting to your workspace...</p>
         </motion.div>
       </div>
     );

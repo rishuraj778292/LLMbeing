@@ -1,50 +1,3 @@
-// import Project from '../models/project.model.js'
-// import { ApiError } from '../utils/ApiError.js';
-// import { ApiResponse } from '../utils/ApiResponse.js';
-// import { asyncHandler } from '../utils/asyncHandler.js'
-
-// const createProject = asyncHandler(async (req, res) => {
-//     const project = await Project.create(req.body);
-//     if (!project) throw new ApiError(400, "project not posted")
-//     res.status(200).send(new ApiResponse(200, project, "posted successfully"));
-// })
-
-// const getAllProject = asyncHandler(async (req, res) => {
-//     const projects = await Project.find({}).populate("client","email fullName");
-//     res.status(200).send(new ApiResponse(200, projects, "successful"))
-// })
-
-// const getProjectBySlug = asyncHandler(async (req, res) => {
-//     const {slug} = req.params;
-//     const projects = await Project.find({slug}).populate("client");
-//     res.status(200).send(new ApiResponse(200, projects, "successful"))
-// })
-
-// const getOwnProject = asyncHandler(async (req, res) => {
-//     const {client} = req.body.user;
-//     const projects = await Project.findOne({client});
-//     res.status(200).send(new ApiResponse(200, projects, "successful"))
-// })
-
-// const updateProject = asyncHandler(async (req, res) => {
-//     const { id } = req.params;
-//     const updatedProjectData = req.body;
-//     const project =await  Project.findByIdAndUpdate(id,updatedProjectData,{
-//         new:true,
-//         runValidators:true,
-//     })
-//     if(!project) throw new ApiError(400,"project not found");
-//     res.status(200).send(new ApiResponse(200,project,"successfully updated"))
-// })
-
-// const deleteProject = asyncHandler(async(req,res)=>{
-//     const {id}=req.params;
-//     const deletedProject = await Project.findByIdAndDelete(id);
-//     if(!deletedProject)throw new ApiError(400,"Project not found");
-//     res.status(200).send(new ApiResponse(200, deletedProject,"Project deleted successfully"));
-// })
-
-// export {createProject, getAllProject,getProjectBySlug,getOwnProject,deleteProject,updateProject };
 
 import Project from '../models/project.model.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -125,3 +78,40 @@ export {
   updateProject,
   deleteProject
 };
+
+
+// saved Project
+//Get
+const getSavedProjects = asyncHandler((req,res)=>{
+  
+})
+//post
+
+// delete
+
+
+// applied project
+//Get
+
+//post
+
+// delete
+
+
+// Active project
+//Get
+
+//post
+
+// delete
+
+
+// completed  project
+//Get
+
+//post
+
+// delete
+
+
+

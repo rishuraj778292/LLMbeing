@@ -2,7 +2,6 @@ import mongoose from 'mongoose'
 const { Schema } = mongoose
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-
 const userSchema = new Schema({
     email: {
         type: String,
@@ -41,6 +40,7 @@ const userSchema = new Schema({
         type: String,
         default: '',
     },
+
 
     // Professional Information
     skills: {
@@ -284,10 +284,31 @@ const userSchema = new Schema({
         type: Number,
         default: 0,
     },
-    savedProject: {
+
+
+    // project activity
+    savedProjects: {
         type: [Schema.Types.ObjectId],
         default: [],
+        ref: 'Project',
     },
+
+    appliedProjects: {
+        type: [Schema.Types.ObjectId],
+        default: [],
+        ref: 'Project',
+    },
+    activeProjects:{
+        type:[Schema.Types.ObjectId],
+        default:[],
+        ref:'Projects',
+    },
+    completedProjects:{
+        type:[Schema.Types.ObjectId],
+        ref:'Projects',
+        default:[],
+    }
+
 
 
 }, {

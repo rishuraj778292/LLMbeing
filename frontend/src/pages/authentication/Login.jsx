@@ -33,7 +33,7 @@
 //   useEffect(() => {
 //     if (status === "succeeded") {
 //       console.log("Updated user:", user);
-//       navigate("/dashboard"); // navigate here
+//       // Role-based navigation would go here
 //     }
 
 //     if (status === "failed") {
@@ -215,11 +215,11 @@ const Login = () => {
       console.log("Updated user:", user);
       // Redirect based on user role
       if (user?.role === 'client') {
-        navigate("/post-project");
+        navigate('/post-project');
       } else if (user?.role === 'freelancer') {
-        navigate("/projects");
+        navigate('/projects');
       } else {
-        navigate("/projects");
+        navigate('/projects');
       }
     }
 
@@ -239,7 +239,7 @@ const Login = () => {
         console.error("Unexpected error:", loginError);
       }
     }
-  }, [isAuthenticated, loginStatus, user, loginError, navigate, setError]);
+  }, [loginStatus, user, loginError, navigate, setError, isAuthenticated]);
 
   const onsubmit = async (data) => {
     console.log("this is data", data);
