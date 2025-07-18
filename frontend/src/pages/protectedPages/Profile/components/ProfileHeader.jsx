@@ -27,13 +27,13 @@ const ProfileHeader = ({ userData, profileCompletion, onEditProfile }) => {
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-6">
-            <div className="px-6 py-6">
-                <div className="flex flex-col md:flex-row md:items-start md:space-x-6">
+            <div className="px-4 sm:px-6 py-4 sm:py-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:space-x-6">
                     {/* Profile Picture with Completion Ring */}
-                    <div className="flex flex-col items-center md:items-start">
+                    <div className="flex flex-col items-center sm:items-start mb-4 sm:mb-0">
                         <div className="relative">
                             {/* Completion Ring */}
-                            <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+                            <svg className="w-24 h-24 sm:w-32 sm:h-32 transform -rotate-90" viewBox="0 0 100 100">
                                 <circle
                                     cx="50"
                                     cy="50"
@@ -77,7 +77,7 @@ const ProfileHeader = ({ userData, profileCompletion, onEditProfile }) => {
                             {/* Camera Button */}
                             <button
                                 onClick={handleUploadProfilePicture}
-                                className="absolute bottom-1 right-1 p-2 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                                className="absolute bottom-1 right-1 p-2 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                             >
                                 <Camera className="w-4 h-4 text-gray-600" />
                             </button>
@@ -85,7 +85,7 @@ const ProfileHeader = ({ userData, profileCompletion, onEditProfile }) => {
 
                         {/* Profile Completion Info */}
                         {profileCompletionPercentage < 100 && (
-                            <div className="mt-3 text-center">
+                            <div className="mt-3 text-center sm:text-left">
                                 <div className="text-sm font-medium text-gray-700">{profileCompletionPercentage}% Complete</div>
                                 <div className="text-xs text-gray-500">Complete your profile</div>
                             </div>
@@ -93,34 +93,32 @@ const ProfileHeader = ({ userData, profileCompletion, onEditProfile }) => {
                     </div>
 
                     {/* Profile Information */}
-                    <div className="flex-1 mt-4 md:mt-0">
-                        <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
                             <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                    <h1 className="text-2xl font-bold text-gray-900">
-                                        {userData.name || userData.userName}
-                                    </h1>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 mb-2">
+                                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 text-center sm:text-left">{userData.name || userData.userName}</h1>
                                     {userData.isProfileVerified && (
-                                        <div className="flex items-center space-x-1 bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                                        <div className="flex items-center justify-center sm:justify-start space-x-1 bg-green-100 text-green-800 px-2 py-1 rounded-full mt-2 sm:mt-0 self-center sm:self-auto">
                                             <Shield className="w-3 h-3" />
                                             <span className="text-xs font-medium">Verified</span>
                                         </div>
                                     )}
                                 </div>
 
-                                <p className="text-lg text-gray-600 mb-3 font-medium">
+                                <p className="text-base sm:text-lg text-gray-600 mb-3 font-medium text-center sm:text-left">
                                     {userData.title || 'Add your professional title'}
                                 </p>
 
                                 {/* Bio Preview */}
                                 {userData.bio && (
-                                    <p className="text-gray-700 mb-4 line-clamp-2">{userData.bio}</p>
+                                    <p className="text-gray-700 mb-4 line-clamp-2 text-center sm:text-left text-sm sm:text-base">{userData.bio}</p>
                                 )}
                             </div>
 
                             <button
                                 onClick={onEditProfile}
-                                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                                className="flex items-center justify-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm w-full sm:w-auto cursor-pointer"
                             >
                                 <Edit className="w-4 h-4" />
                                 <span>Edit Profile</span>
@@ -128,21 +126,21 @@ const ProfileHeader = ({ userData, profileCompletion, onEditProfile }) => {
                         </div>
 
                         {/* Key Information */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4">
                             {userData.country && (
-                                <div className="flex items-center space-x-2 text-gray-600">
+                                <div className="flex items-center justify-center sm:justify-start space-x-2 text-gray-600">
                                     <MapPin className="w-4 h-4 text-gray-400" />
                                     <span className="text-sm">{userData.country}{userData.city ? `, ${userData.city}` : ''}</span>
                                 </div>
                             )}
 
-                            <div className="flex items-center space-x-2 text-gray-600">
+                            <div className="flex items-center justify-center sm:justify-start space-x-2 text-gray-600">
                                 <Calendar className="w-4 h-4 text-gray-400" />
                                 <span className="text-sm">Joined {userData.joinDate}</span>
                             </div>
 
                             {userData.hourlyRate && (
-                                <div className="flex items-center space-x-2 text-gray-600">
+                                <div className="flex items-center justify-center sm:justify-start space-x-2 text-gray-600 sm:col-span-2 lg:col-span-1">
                                     <DollarSign className="w-4 h-4 text-gray-400" />
                                     <span className="text-sm font-medium">${userData.hourlyRate}/hour</span>
                                 </div>

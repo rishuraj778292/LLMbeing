@@ -71,9 +71,9 @@ const Navbar = ({ isAuthPage }) => {
         <>
             <nav className='fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm'>
                 <div className='mx-auto px-6'>
-                    <div className='flex items-center h-16'>
+                    <div className='flex items-center justify-between h-16'>
                         {/* Logo */}
-                        <div className='flex items-center mr-8'>
+                        <div className='flex items-center'>
                             <NavLink to='/' className='flex items-center space-x-2'>
                                 <div className='w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center'>
                                     <span className='text-white font-bold text-sm'>L</span>
@@ -84,8 +84,8 @@ const Navbar = ({ isAuthPage }) => {
 
                         {!isAuthPage && (
                             <>
-                                {/* Desktop Navigation - Left aligned */}
-                                <div className='hidden md:flex items-center space-x-1 flex-1'>
+                                {/* Desktop Navigation - Center section */}
+                                <div className='hidden md:flex items-center space-x-1 flex-1 ml-8'>
                                     {isAuthenticated ? (
                                         navigationItems.map((item) => (
                                             <NavLink
@@ -275,8 +275,10 @@ const Navbar = ({ isAuthPage }) => {
                                             </NavLink>
                                         </div>
                                     )}
-                                </div>                                {/* Mobile menu button */}
-                                <div className='md:hidden hamburger'>
+                                </div>
+
+                                {/* Mobile menu button */}
+                                <div className='md:hidden ml-auto hamburger'>
                                     <button
                                         onClick={toggleMobileMenu}
                                         className='p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors'

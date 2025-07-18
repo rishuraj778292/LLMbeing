@@ -19,7 +19,7 @@ const ProjectsTab = ({ userData, onEditModal }) => {
                     </h3>
                     <button
                         onClick={userData.role === 'freelancer' ? () => onEditModal('portfolio', {}) : handlePostProject}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                     >
                         {userData.role === 'freelancer' ? 'Add Project' : 'Post Project'}
                     </button>
@@ -29,7 +29,7 @@ const ProjectsTab = ({ userData, onEditModal }) => {
                     <div className="flex space-x-1 mb-4 bg-gray-100 rounded-lg p-1">
                         <button
                             onClick={() => setProjectCategory('all')}
-                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${projectCategory === 'all'
+                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors cursor-pointer ${projectCategory === 'all'
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
                                 }`}
@@ -38,7 +38,7 @@ const ProjectsTab = ({ userData, onEditModal }) => {
                         </button>
                         <button
                             onClick={() => setProjectCategory('client')}
-                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${projectCategory === 'client'
+                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors cursor-pointer ${projectCategory === 'client'
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
                                 }`}
@@ -47,7 +47,7 @@ const ProjectsTab = ({ userData, onEditModal }) => {
                         </button>
                         <button
                             onClick={() => setProjectCategory('personal')}
-                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${projectCategory === 'personal'
+                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors cursor-pointer ${projectCategory === 'personal'
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'
                                 }`}
@@ -158,7 +158,7 @@ const ProjectsTab = ({ userData, onEditModal }) => {
                         </p>
                         <button
                             onClick={userData.role === 'freelancer' ? () => onEditModal('portfolio', {}) : handlePostProject}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                         >
                             {userData.role === 'freelancer' ? 'Add your first project' : 'Post your first project'}
                         </button>

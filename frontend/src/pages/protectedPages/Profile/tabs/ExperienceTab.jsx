@@ -10,7 +10,7 @@ const ExperienceTab = ({ userData, onEditModal }) => {
                     <h3 className="text-lg font-semibold text-gray-900">Work Experience</h3>
                     <button
                         onClick={() => onEditModal('experience', {})}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                     >
                         Add Experience
                     </button>
@@ -68,7 +68,7 @@ const ExperienceTab = ({ userData, onEditModal }) => {
                         <p className="text-gray-500 mb-2">Showcase your professional background</p>
                         <button
                             onClick={() => onEditModal('experience', {})}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                         >
                             Add work experience
                         </button>

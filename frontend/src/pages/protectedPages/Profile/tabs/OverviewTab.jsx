@@ -90,7 +90,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                     <h3 className="text-lg font-semibold text-gray-900">About</h3>
                     <button
                         onClick={() => onEditModal('about', { bio: userData?.bio || '' })}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                     >
                         Edit
                     </button>
@@ -102,7 +102,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                         <p className="text-gray-500 mb-2">Tell your story and introduce yourself</p>
                         <button
                             onClick={() => onEditModal('about', { bio: '' })}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                         >
                             Add about section
                         </button>
@@ -118,7 +118,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                         onClick={() => onEditModal('skills', {
                             skills: userData?.skills ? userData.skills.join(', ') : ''
                         })}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                     >
                         Edit
                     </button>
@@ -139,7 +139,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                         <p className="text-gray-500 mb-2">Showcase your skills and expertise</p>
                         <button
                             onClick={() => onEditModal('skills', { skills: '' })}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                         >
                             Add your first skill
                         </button>
@@ -148,9 +148,9 @@ const OverviewTab = ({ userData, onEditModal }) => {
             </div>
 
             {/* Contact Information - Clean Standard Design */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Contact Information</h3>
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Contact Information</h3>
                     <button
                         onClick={() => onEditModal('profile', {
                             email: userData?.email || '',
@@ -159,20 +159,20 @@ const OverviewTab = ({ userData, onEditModal }) => {
                             github: userData?.github || '',
                             linkedin: userData?.linkedin || ''
                         })}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium cursor-pointer"
                     >
                         Edit
                     </button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                     {/* Email */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                            <Mail className="w-5 h-5 text-gray-400" />
+                            <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                             <div>
-                                <div className="text-sm text-gray-500">Email</div>
-                                <div className="text-gray-900 font-medium">{userData.email}</div>
+                                <div className="text-xs sm:text-sm text-gray-500">Email</div>
+                                <div className="text-sm sm:text-base text-gray-900 font-medium">{userData.email}</div>
                             </div>
                         </div>
                         {userData.isEmailVerified ? (
@@ -183,7 +183,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                         ) : (
                             <button
                                 onClick={handleVerifyEmail}
-                                className="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full hover:bg-amber-200 transition-colors"
+                                className="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full hover:bg-amber-200 transition-colors cursor-pointer"
                             >
                                 Verify
                             </button>
@@ -193,9 +193,9 @@ const OverviewTab = ({ userData, onEditModal }) => {
                     {/* Phone */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3 flex-1">
-                            <Phone className="w-5 h-5 text-gray-400" />
+                            <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                             <div className="flex-1">
-                                <div className="text-sm text-gray-500">Phone</div>
+                                <div className="text-xs sm:text-sm text-gray-500">Phone</div>
                                 {inlineEdit.phone ? (
                                     <div className="flex items-center space-x-2 mt-1">
                                         <input
@@ -208,23 +208,23 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                         />
                                         <button
                                             onClick={() => handleInlineSave('phone')}
-                                            className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                            className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 cursor-pointer"
                                         >
                                             Save
                                         </button>
                                         <button
                                             onClick={() => handleInlineCancel('phone')}
-                                            className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                                            className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
                                         >
                                             Cancel
                                         </button>
                                     </div>
                                 ) : userData.phone ? (
                                     <div className="flex items-center space-x-2">
-                                        <span className="text-gray-900 font-medium">{userData.phone}</span>
+                                        <span className="text-sm sm:text-base text-gray-900 font-medium">{userData.phone}</span>
                                         <button
                                             onClick={() => handleInlineEdit('phone')}
-                                            className="text-gray-400 hover:text-gray-600 text-xs"
+                                            className="text-gray-400 hover:text-gray-600 text-xs cursor-pointer"
                                         >
                                             <Edit className="w-3 h-3" />
                                         </button>
@@ -232,7 +232,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                 ) : (
                                     <button
                                         onClick={() => handleInlineEdit('phone')}
-                                        className="text-blue-600 hover:text-blue-700 text-sm"
+                                        className="text-blue-600 hover:text-blue-700 text-sm cursor-pointer"
                                     >
                                         Tap to add your phone number
                                     </button>
@@ -248,7 +248,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                             ) : (
                                 <button
                                     onClick={handleVerifyPhone}
-                                    className="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full hover:bg-amber-200 transition-colors"
+                                    className="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full hover:bg-amber-200 transition-colors cursor-pointer"
                                 >
                                     Verify
                                 </button>
@@ -258,9 +258,9 @@ const OverviewTab = ({ userData, onEditModal }) => {
 
                     {/* Location */}
                     <div className="flex items-center space-x-3">
-                        <MapPin className="w-5 h-5 text-gray-400" />
+                        <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                         <div className="flex-1">
-                            <div className="text-sm text-gray-500">Location</div>
+                            <div className="text-xs sm:text-sm text-gray-500">Location</div>
                             {inlineEdit.location ? (
                                 <div className="flex items-center space-x-2 mt-1">
                                     <input
@@ -280,23 +280,23 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                     />
                                     <button
                                         onClick={() => handleInlineSave('location')}
-                                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 cursor-pointer"
                                     >
                                         Save
                                     </button>
                                     <button
                                         onClick={() => handleInlineCancel('location')}
-                                        className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                                        className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
                                     >
                                         Cancel
                                     </button>
                                 </div>
                             ) : userData.country ? (
                                 <div className="flex items-center space-x-2">
-                                    <span className="text-gray-900 font-medium">{userData.country}{userData.city ? `, ${userData.city}` : ''}</span>
+                                    <span className="text-sm sm:text-base text-gray-900 font-medium">{userData.country}{userData.city ? `, ${userData.city}` : ''}</span>
                                     <button
                                         onClick={() => handleInlineEdit('location')}
-                                        className="text-gray-400 hover:text-gray-600 text-xs"
+                                        className="text-gray-400 hover:text-gray-600 text-xs cursor-pointer"
                                     >
                                         <Edit className="w-3 h-3" />
                                     </button>
@@ -304,7 +304,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                             ) : (
                                 <button
                                     onClick={() => handleInlineEdit('location')}
-                                    className="text-blue-600 hover:text-blue-700 text-sm"
+                                    className="text-blue-600 hover:text-blue-700 text-sm cursor-pointer"
                                 >
                                     Tap to add your location
                                 </button>
@@ -314,9 +314,9 @@ const OverviewTab = ({ userData, onEditModal }) => {
 
                     {/* Website */}
                     <div className="flex items-center space-x-3">
-                        <Globe className="w-5 h-5 text-gray-400" />
+                        <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                         <div className="flex-1">
-                            <div className="text-sm text-gray-500">Website</div>
+                            <div className="text-xs sm:text-sm text-gray-500">Website</div>
                             {inlineEdit.website ? (
                                 <div className="flex items-center space-x-2 mt-1">
                                     <input
@@ -329,13 +329,13 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                     />
                                     <button
                                         onClick={() => handleInlineSave('website')}
-                                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 cursor-pointer"
                                     >
                                         Save
                                     </button>
                                     <button
                                         onClick={() => handleInlineCancel('website')}
-                                        className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                                        className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
                                     >
                                         Cancel
                                     </button>
@@ -346,14 +346,14 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                         href={userData.website}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
+                                        className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 text-sm sm:text-base cursor-pointer"
                                     >
                                         <span>{userData.website.replace(/^https?:\/\//, '')}</span>
                                         <ExternalLink className="w-3 h-3" />
                                     </a>
                                     <button
                                         onClick={() => handleInlineEdit('website')}
-                                        className="text-gray-400 hover:text-gray-600 text-xs"
+                                        className="text-gray-400 hover:text-gray-600 text-xs cursor-pointer"
                                     >
                                         <Edit className="w-3 h-3" />
                                     </button>
@@ -361,7 +361,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                             ) : (
                                 <button
                                     onClick={() => handleInlineEdit('website')}
-                                    className="text-blue-600 hover:text-blue-700 text-sm"
+                                    className="text-blue-600 hover:text-blue-700 text-sm cursor-pointer"
                                 >
                                     Tap to add your website
                                 </button>
@@ -371,9 +371,9 @@ const OverviewTab = ({ userData, onEditModal }) => {
 
                     {/* GitHub */}
                     <div className="flex items-center space-x-3">
-                        <Github className="w-5 h-5 text-gray-400" />
+                        <Github className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                         <div className="flex-1">
-                            <div className="text-sm text-gray-500">GitHub</div>
+                            <div className="text-xs sm:text-sm text-gray-500">GitHub</div>
                             {inlineEdit.github ? (
                                 <div className="flex items-center space-x-2 mt-1">
                                     <input
@@ -386,13 +386,13 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                     />
                                     <button
                                         onClick={() => handleInlineSave('github')}
-                                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 cursor-pointer"
                                     >
                                         Save
                                     </button>
                                     <button
                                         onClick={() => handleInlineCancel('github')}
-                                        className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                                        className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
                                     >
                                         Cancel
                                     </button>
@@ -402,7 +402,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                     href={userData.github}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
+                                    className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 text-sm sm:text-base cursor-pointer"
                                 >
                                     <span>@{userData.github.split('/').pop()}</span>
                                     <button
@@ -410,7 +410,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                             e.preventDefault();
                                             handleInlineEdit('github');
                                         }}
-                                        className="ml-2 text-gray-400 hover:text-gray-600"
+                                        className="ml-2 text-gray-400 hover:text-gray-600 cursor-pointer"
                                         title="Edit"
                                     >
                                         <Edit className="w-3 h-3" />
@@ -419,7 +419,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                             ) : (
                                 <button
                                     onClick={() => handleInlineEdit('github')}
-                                    className="text-blue-600 hover:text-blue-700 text-sm"
+                                    className="text-blue-600 hover:text-blue-700 text-sm cursor-pointer"
                                 >
                                     Tap to add your GitHub account
                                 </button>
@@ -429,9 +429,9 @@ const OverviewTab = ({ userData, onEditModal }) => {
 
                     {/* LinkedIn */}
                     <div className="flex items-center space-x-3">
-                        <Linkedin className="w-5 h-5 text-gray-400" />
+                        <Linkedin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                         <div className="flex-1">
-                            <div className="text-sm text-gray-500">LinkedIn</div>
+                            <div className="text-xs sm:text-sm text-gray-500">LinkedIn</div>
                             {inlineEdit.linkedin ? (
                                 <div className="flex items-center space-x-2 mt-1">
                                     <input
@@ -444,13 +444,13 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                     />
                                     <button
                                         onClick={() => handleInlineSave('linkedin')}
-                                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 cursor-pointer"
                                     >
                                         Save
                                     </button>
                                     <button
                                         onClick={() => handleInlineCancel('linkedin')}
-                                        className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50"
+                                        className="px-2 py-1 text-gray-500 text-xs border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
                                     >
                                         Cancel
                                     </button>
@@ -460,7 +460,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                     href={userData.linkedin}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
+                                    className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 text-sm sm:text-base cursor-pointer"
                                 >
                                     <span>LinkedIn Profile</span>
                                     <button
@@ -468,7 +468,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                             e.preventDefault();
                                             handleInlineEdit('linkedin');
                                         }}
-                                        className="ml-2 text-gray-400 hover:text-gray-600"
+                                        className="ml-2 text-gray-400 hover:text-gray-600 cursor-pointer"
                                         title="Edit"
                                     >
                                         <Edit className="w-3 h-3" />
@@ -477,7 +477,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                             ) : (
                                 <button
                                     onClick={() => handleInlineEdit('linkedin')}
-                                    className="text-blue-600 hover:text-blue-700 text-sm"
+                                    className="text-blue-600 hover:text-blue-700 text-sm cursor-pointer"
                                 >
                                     Tap to add your LinkedIn account
                                 </button>
@@ -495,7 +495,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                         <h3 className="text-lg font-semibold text-gray-900">Languages</h3>
                         <button
                             onClick={() => onEditModal('languages', {})}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                         >
                             Edit
                         </button>
@@ -506,9 +506,9 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                 <div key={index} className="flex items-center justify-between">
                                     <span className="text-gray-900 font-medium">{lang.name}</span>
                                     <span className={`px-2 py-1 rounded text-xs font-medium ${lang.level === 'Native' ? 'bg-green-100 text-green-800' :
-                                            lang.level === 'Fluent' ? 'bg-blue-100 text-blue-800' :
-                                                lang.level === 'Conversational' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-gray-100 text-gray-800'
+                                        lang.level === 'Fluent' ? 'bg-blue-100 text-blue-800' :
+                                            lang.level === 'Conversational' ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-gray-100 text-gray-800'
                                         }`}>
                                         {lang.level}
                                     </span>
@@ -520,7 +520,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                             <p className="text-gray-500 mb-2">Add languages you speak</p>
                             <button
                                 onClick={() => onEditModal('languages', {})}
-                                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                             >
                                 Add languages
                             </button>
@@ -534,7 +534,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                         <h3 className="text-lg font-semibold text-gray-900">Certifications</h3>
                         <button
                             onClick={() => onEditModal('certifications', {})}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                         >
                             Edit
                         </button>
@@ -552,7 +552,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                                 href={cert.credentialUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-blue-600 hover:text-blue-700 text-xs font-medium"
+                                                className="text-blue-600 hover:text-blue-700 text-xs font-medium cursor-pointer"
                                             >
                                                 View Credential
                                             </a>
@@ -566,7 +566,7 @@ const OverviewTab = ({ userData, onEditModal }) => {
                             <p className="text-gray-500 mb-2">Showcase your certifications</p>
                             <button
                                 onClick={() => onEditModal('certifications', {})}
-                                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                             >
                                 Add certifications
                             </button>

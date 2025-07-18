@@ -10,7 +10,7 @@ const EducationTab = ({ userData, onEditModal }) => {
                     <h3 className="text-lg font-semibold text-gray-900">Education</h3>
                     <button
                         onClick={() => onEditModal('education', {})}
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                     >
                         Add Education
                     </button>
@@ -50,7 +50,7 @@ const EducationTab = ({ userData, onEditModal }) => {
                         <p className="text-gray-500 mb-2">Add your educational background</p>
                         <button
                             onClick={() => onEditModal('education', {})}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium cursor-pointer"
                         >
                             Add education
                         </button>

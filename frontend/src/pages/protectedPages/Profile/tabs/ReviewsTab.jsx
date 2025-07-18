@@ -63,7 +63,7 @@ const ReviewsTab = ({ userData }) => {
                         <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
                             <button
                                 onClick={() => setFilter('all')}
-                                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'all'
+                                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors cursor-pointer ${filter === 'all'
                                     ? 'bg-white text-gray-900 shadow-sm'
                                     : 'text-gray-600 hover:text-gray-900'
                                     }`}
@@ -72,7 +72,7 @@ const ReviewsTab = ({ userData }) => {
                             </button>
                             <button
                                 onClick={() => setFilter('recent')}
-                                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'recent'
+                                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors cursor-pointer ${filter === 'recent'
                                     ? 'bg-white text-gray-900 shadow-sm'
                                     : 'text-gray-600 hover:text-gray-900'
                                     }`}
@@ -81,7 +81,7 @@ const ReviewsTab = ({ userData }) => {
                             </button>
                             <button
                                 onClick={() => setFilter('high')}
-                                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'high'
+                                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors cursor-pointer ${filter === 'high'
                                     ? 'bg-white text-gray-900 shadow-sm'
                                     : 'text-gray-600 hover:text-gray-900'
                                     }`}
@@ -163,7 +163,7 @@ const ReviewsTab = ({ userData }) => {
                                                 {shouldTruncate && (
                                                     <button
                                                         onClick={() => toggleReviewExpansion(index)}
-                                                        className="text-blue-600 hover:text-blue-700 text-xs mt-1"
+                                                        className="text-blue-600 hover:text-blue-700 text-xs mt-1 cursor-pointer"
                                                     >
                                                         {isExpanded ? 'Show less' : 'Read more'}
                                                     </button>
