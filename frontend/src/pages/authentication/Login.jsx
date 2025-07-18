@@ -247,44 +247,44 @@ const Login = () => {
   };
 
   return (
-    <div className='min-h-screen min-w-screen  md:px-10   md:flex md:items-center md:justify-center ' >
-      <div className=" h-full w-full flex flex-col md:flex-row bg it-gray-50 font-sans border rounded-2xl">
+    <div className='min-h-screen min-w-screen md:px-10 md:flex md:items-center md:justify-center pt-20 md:pt-10' >
+      <div className="h-full w-full flex flex-col md:flex-row bg-gray-50 font-sans border rounded-2xl mt-4 md:mt-0 mb-8">
         {/* Left side - Image and intro text */}
-        <div className="md:w-5/12 bg-indigo-900 bg-gradient-to-br from-indigo-800 to-indigo-900 text-white flex flex-col justify-center p-8 md:p-12 pt-20 md:rounded-l-2xl">
+        <div className="md:w-5/12 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col justify-center p-8 md:p-12 pt-8 md:pt-20 md:rounded-l-2xl">
           <div className="max-w-md mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Welcome back to LLMbeing</h1>
-            <p className="text-lg mb-8 text-indigo-100">Connect with your freelance community and manage your projects.</p>
+            <p className="text-lg mb-8 text-blue-100">Connect with your freelance community and manage your projects.</p>
 
             <div className="mb-12">
               <div className="flex items-center mb-4">
-                <div className="bg-indigo-100 rounded-full p-2 mr-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-blue-100 rounded-full p-2 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <span className="text-indigo-100">Access your projects and clients</span>
+                <span className="text-blue-100">Access your projects and clients</span>
               </div>
               <div className="flex items-center mb-4">
-                <div className="bg-indigo-100 rounded-full p-2 mr-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-blue-100 rounded-full p-2 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <span className="text-indigo-100">Track your earnings and growth</span>
+                <span className="text-blue-100">Track your earnings and growth</span>
               </div>
               <div className="flex items-center">
-                <div className="bg-indigo-100 rounded-full p-2 mr-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-blue-100 rounded-full p-2 mr-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <span className="text-indigo-100">Connect with your network</span>
+                <span className="text-blue-100">Connect with your network</span>
               </div>
             </div>
 
-            <div className="text-sm text-indigo-200">
+            <div className="text-sm text-blue-200">
               Don't have an account?{" "}
-              <a href="/signup" className="text-white font-medium hover:text-indigo-100">Sign up</a>
+              <a href="/signup" className="text-white font-medium hover:text-blue-100">Sign up</a>
             </div>
           </div>
         </div>
@@ -310,7 +310,7 @@ const Login = () => {
                   <input
                     type="text"
                     id="emailOrUserName"
-                    className="w-full pl-10 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none"
+                    className="w-full pl-10 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                     placeholder="Enter your email or username"
                     {...register("emailOrUserName", { required: "Email or username is required" })}
                   />
@@ -332,7 +332,7 @@ const Login = () => {
                   <input
                     type="password"
                     id="password"
-                    className="w-full pl-10 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none"
+                    className="w-full pl-10 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                     placeholder="Enter your password"
                     {...register("password", { required: "Password is required" })}
                   />
@@ -348,7 +348,7 @@ const Login = () => {
                   <input
                     id="remember"
                     type="checkbox"
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     {...register("remember")}
                   />
                   <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
@@ -357,7 +357,7 @@ const Login = () => {
                 </div>
 
                 <div className="text-sm">
-                  <a href="/forgotpassword" className="font-medium text-indigo-600 hover:text-indigo-500">
+                  <a href="/forgotpassword" className="font-medium text-blue-600 hover:text-blue-500">
                     Forgot password?
                   </a>
                 </div>
@@ -367,9 +367,9 @@ const Login = () => {
               <div>
                 <button
                   type="submit"
-                  className="w-full bg-indigo-600 text-white py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  {status === "loading" ? (
+                  {loginStatus === "loading" ? (
                     <span className="flex items-center justify-center">
                       <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

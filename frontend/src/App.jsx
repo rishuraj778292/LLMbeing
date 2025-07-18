@@ -12,7 +12,7 @@ import ProtectedLayout from "./layout/ProtectedLayout"
 
 import Messages from "./pages/protectedPages/Messages"
 import Gigs from "./pages/protectedPages/Gigs"
-import Profile from "./pages/protectedPages/Profile"
+import Profile from "./pages/protectedPages/Profile/Profile"
 import { useSelector, useDispatch } from "react-redux"
 import { verifyme } from "../Redux/Slice/authSlice"
 import Accountsetting from "./pages/protectedPages/Accountsetting"

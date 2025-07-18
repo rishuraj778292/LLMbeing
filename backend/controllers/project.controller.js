@@ -8,7 +8,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 const createProject = asyncHandler(async (req, res) => {
   const projectData = {
     ...req.body,
-      client : req.user._id,
+    client: req.user._id,
   }
   const project = await Project.create(projectData);
   if (!project) throw new ApiError(400, "Project not posted");
@@ -82,8 +82,8 @@ export {
 
 // saved Project
 //Get
-const getSavedProjects = asyncHandler((req,res)=>{
-  
+const getSavedProjects = asyncHandler((req, res) => {
+
 })
 //post
 
