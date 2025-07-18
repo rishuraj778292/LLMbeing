@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { Search, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 const ProjectFilterSidebar = () => {
+
+  
+
   const [filters, setFilters] = useState({
     search: '',
     projectCategory: [],

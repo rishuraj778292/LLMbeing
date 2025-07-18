@@ -10,6 +10,30 @@ const BrowseProjects = () => {
   const { projects, page, totalPages, status, loadingMore } = useSelector((state) => state.projects);
   const observer = useRef();
 
+  // postion for filtersidebar
+   const [stopScroll,setStopScroll] = useState(false);
+     useEffect(()=>{
+            const handleScroll = ()=>{
+              const scroll_y = window.scrollY;
+              setStopScroll(scroll_y>300)
+              };
+  
+              window.addEventListener('scroll',handleScroll)
+              return ()=>{
+                window.removeEventListener('scroll',handleScroll)
+              }
+     })
+      let  className = `hidden lg:block transition-all duration-300 ${showFilters ? 'w-80' : 'w-72'}`;
+      useEffect(()=>{
+          if(stopScroll){
+              className = `fixed top-20 hidden  lg:block transition-all duration-300 ${showFilters ? 'w-80' : 'w-72'}`;
+          }
+          else{
+              className = `hidden lg:block transition-all duration-300 ${showFilters ? 'w-80' : 'w-72'}`;
+          }
+      },[stopScroll])
+
+
   // Local state for UI controls
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [showFilters, setShowFilters] = useState(false);
@@ -65,7 +89,7 @@ const BrowseProjects = () => {
   return (
     <div className="flex gap-6">
       {/* Sidebar - Desktop */}
-      <div className={`hidden lg:block transition-all duration-300 ${showFilters ? 'w-80' : 'w-72'}`}>
+      <div className={}>
         <ProjectFilterSidebar />
       </div>
 

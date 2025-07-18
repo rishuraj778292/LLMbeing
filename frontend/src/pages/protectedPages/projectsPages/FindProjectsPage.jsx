@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchProjects } from '../../../../Redux/Slice/projectSlice';
 import ProjectCard from '../../../components/projects/ProjectCard';
 import ProjectFilterSidebar from '../../../components/projects/ProjectFilterSidebar';
-import { Search, Filter, SortAsc, Grid, List, Briefcase, Clock, TrendingUp } from 'lucide-react';
+import { Search, Filter, SortAsc, Grid, List, ArrowBigUp,ArrowUp } from 'lucide-react';
 
 const FindProjectsPage = () => {
     const dispatch = useDispatch();
@@ -15,7 +15,27 @@ const FindProjectsPage = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [sortBy, setSortBy] = useState('newest');
     const [searchTerm, setSearchTerm] = useState('');
+    const [gototopButton, setGototopButton] = useState(false);
 
+    useEffect(() => {
+        const handleScroll = () => {
+            const scroll_y = window.scrollY;
+            setGototopButton(scroll_y > 500);
+        }
+
+        window.addEventListener('scroll', handleScroll);
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll)
+        }
+    }, [])
+
+    const gotoTop = () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
     const lastProjectRef = useCallback(
         (node) => {
             if (loadingMore || status === 'loading' || page >= totalPages) return;
@@ -60,7 +80,7 @@ const FindProjectsPage = () => {
     return (
         <div className="min-h-screen bg-slate-50">
             {/* Enhanced Header Section */}
-            <div className="bg-white border-b border-slate-200">
+            <div >
                 <div className="max-w-7xl mx-auto px-6 py-8">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                         <div className="flex-1">
@@ -68,29 +88,17 @@ const FindProjectsPage = () => {
                             <p className="text-lg text-slate-600 mb-4">
                                 Discover opportunities that match your skills and grow your career
                             </p>
-
-                            {/* Quick Stats */}
-                            <div className="flex items-center space-x-6">
-                                <div className="flex items-center space-x-2 text-sm text-slate-600">
-                                    <Briefcase className="w-4 h-4 text-blue-600" />
-                                    <span className="font-medium">{projects.length}</span>
-                                    <span>Active Projects</span>
-                                </div>
-                                <div className="flex items-center space-x-2 text-sm text-slate-600">
-                                    <TrendingUp className="w-4 h-4 text-green-600" />
-                                    <span className="font-medium">156</span>
-                                    <span>Posted Today</span>
-                                </div>
-                                <div className="flex items-center space-x-2 text-sm text-slate-600">
-                                    <Clock className="w-4 h-4 text-orange-600" />
-                                    <span className="font-medium">Avg 2-3 days</span>
-                                    <span>Response Time</span>
-                                </div>
-                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        {/* Primary Search Bar */}
-                        <div className="w-full lg:w-96">
+            {/* Centralized Search and Filter Bar */}
+            <div className="max-w-7xl mx-auto px-6 pb-6">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                        {/* Search Bar */}
+                        <div className="flex-1">
                             <div className="relative">
                                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                                 <input
@@ -101,6 +109,59 @@ const FindProjectsPage = () => {
                                     className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
                                 />
                             </div>
+                        </div>
+
+                        {/* Controls Row */}
+                        <div className="flex items-center space-x-3 flex-wrap gap-2">
+                            {/* Sort Dropdown */}
+                            <div className="relative">
+                                <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    className="pl-9 pr-8 py-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white min-w-[160px]"
+                                >
+                                    <option value="newest">Newest First</option>
+                                    <option value="oldest">Oldest First</option>
+                                    <option value="budget-high">Budget: High to Low</option>
+                                    <option value="budget-low">Budget: Low to High</option>
+                                </select>
+                            </div>
+
+                            {/* Mobile Filter Toggle */}
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className="lg:hidden flex items-center space-x-2 px-4 py-3 border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+                            >
+                                <Filter className="w-4 h-4" />
+                                <span>Filters</span>
+                            </button>
+
+                            {/* View Mode Toggle */}
+                            <div className="hidden sm:flex border border-slate-300 rounded-lg overflow-hidden bg-white">
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-3 text-sm transition-colors ${viewMode === 'list'
+                                        ? 'bg-blue-500 text-white'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                    title="List View"
+                                >
+                                    <List className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-3 text-sm transition-colors ${viewMode === 'grid'
+                                        ? 'bg-blue-500 text-white'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                    title="Grid View"
+                                >
+                                    <Grid className="w-4 h-4" />
+                                </button>
+                            </div>
+
+
                         </div>
                     </div>
                 </div>
@@ -118,74 +179,6 @@ const FindProjectsPage = () => {
 
                     {/* Main Content */}
                     <div className="flex-1 min-w-0">
-                        {/* Enhanced Controls Bar */}
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                {/* Results Info */}
-                                <div className="flex items-center space-x-4">
-                                    <div>
-                                        <span className="text-sm font-medium text-slate-900">
-                                            {sortedProjects.length} project{sortedProjects.length !== 1 ? 's' : ''}
-                                        </span>
-                                        <span className="text-sm text-slate-500 ml-1">
-                                            • Sorted by {sortBy.replace('-', ' ')}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Controls */}
-                                <div className="flex items-center space-x-3">
-                                    {/* Sort Dropdown */}
-                                    <div className="relative">
-                                        <SortAsc className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                        <select
-                                            value={sortBy}
-                                            onChange={(e) => setSortBy(e.target.value)}
-                                            className="pl-9 pr-8 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                        >
-                                            <option value="newest">Newest First</option>
-                                            <option value="oldest">Oldest First</option>
-                                            <option value="budget-high">Budget: High to Low</option>
-                                            <option value="budget-low">Budget: Low to High</option>
-                                        </select>
-                                    </div>
-
-                                    {/* Mobile Filter Toggle */}
-                                    <button
-                                        onClick={() => setShowFilters(!showFilters)}
-                                        className="lg:hidden flex items-center space-x-2 px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                                    >
-                                        <Filter className="w-4 h-4" />
-                                        <span>Filters</span>
-                                    </button>
-
-                                    {/* View Mode Toggle */}
-                                    <div className="hidden sm:flex border border-slate-300 rounded-lg overflow-hidden bg-white">
-                                        <button
-                                            onClick={() => setViewMode('list')}
-                                            className={`p-2 text-sm transition-colors ${viewMode === 'list'
-                                                ? 'bg-blue-500 text-white'
-                                                : 'text-slate-600 hover:bg-slate-50'
-                                                }`}
-                                            title="List View"
-                                        >
-                                            <List className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode('grid')}
-                                            className={`p-2 text-sm transition-colors ${viewMode === 'grid'
-                                                ? 'bg-blue-500 text-white'
-                                                : 'text-slate-600 hover:bg-slate-50'
-                                                }`}
-                                            title="Grid View"
-                                        >
-                                            <Grid className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Mobile Filters */}
                         {showFilters && (
                             <div className="lg:hidden mb-6">
@@ -267,7 +260,7 @@ const FindProjectsPage = () => {
                         {page >= totalPages && projects.length > 0 && (
                             <div className="text-center py-8">
                                 <div className="bg-slate-50 rounded-lg p-6">
-                                    <p className="text-slate-600 font-medium">🎉 You've seen all available projects!</p>
+                                    <p className="text-slate-600 font-medium">You've seen all available projects!</p>
                                     <p className="text-sm text-slate-500 mt-1">Check back later for new opportunities</p>
                                 </div>
                             </div>
@@ -275,6 +268,13 @@ const FindProjectsPage = () => {
                     </div>
                 </div>
             </div>
+
+            {gototopButton &&
+                <button 
+                onClick={gotoTop}
+                className='fixed bottom-2 right-2 rounded-2xl bg-blue-600 px-3 py-3 cursor-pointer'>
+                    <ArrowUp size={24} />
+                </button>}
         </div>
     );
 };

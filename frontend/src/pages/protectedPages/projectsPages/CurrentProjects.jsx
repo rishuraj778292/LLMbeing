@@ -1,9 +1,163 @@
-import React from 'react'
+import { useState } from 'react';
+import { Search } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const CurrentProjects = () => {
-  return (
-    <div>CurrentProjects</div>
-  )
-}
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const { user } = useSelector((state) => state.auth);
 
-export default CurrentProjects
+  // No current projects currently
+  const currentProjects = [];
+
+  const filteredProjects = currentProjects.filter(project => {
+    const matchesSearch = !searchTerm ||
+      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.client?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const statusOptions = user?.role === 'freelancer'
+    ? [
+      { value: 'all', label: 'All Projects' },
+      { value: 'in-progress', label: 'In Progress' },
+      { value: 'review', label: 'Under Review' },
+      { value: 'revision', label: 'Needs Revision' }
+    ]
+    : [
+      { value: 'all', label: 'All Projects' },
+      { value: 'active', label: 'Active' },
+      { value: 'review', label: 'Under Review' },
+      { value: 'revision', label: 'Needs Revision' }
+    ];
+
+  const handleBrowseProjects = () => {
+    navigate('/projects');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">
+                {user?.role === 'freelancer' ? 'Active Projects' : 'Your Active Projects'}
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-600">
+                {user?.role === 'freelancer'
+                  ? 'Manage your ongoing work and track project progress.'
+                  : 'Monitor your posted projects and collaborate with freelancers.'}
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-xs sm:text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
+                {filteredProjects.length} of {currentProjects.length} projects
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 sm:w-5 h-4 sm:h-5" />
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {currentProjects.length > 0 && (
+            <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600">
+              {filteredProjects.length} of {currentProjects.length} projects
+            </div>
+          )}
+        </div>
+
+        {/* Projects List */}
+        {filteredProjects.length > 0 ? (
+          <div className="space-y-4">
+            {filteredProjects.map((project) => (
+              <div key={project.id} className="bg-white rounded-lg border border-slate-200 p-6 hover:shadow-md transition-shadow">
+                {/* Project content would go here */}
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Empty State */
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="text-center py-12 sm:py-16 px-6 sm:px-8">
+
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
+                {user?.role === 'freelancer' ? 'No active projects' : 'No active projects'}
+              </h3>
+              <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-6 sm:mb-8 max-w-md lg:max-w-lg mx-auto">
+                {searchTerm || statusFilter !== 'all'
+                  ? "No projects match your current filters. Try adjusting your search criteria."
+                  : user?.role === 'freelancer'
+                    ? "You don't have any active projects yet. Start applying to projects to begin working and building your portfolio!"
+                    : "You don't have any active projects yet. Post a project to get started and connect with talented freelancers!"
+                }
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                {(searchTerm || statusFilter !== 'all') ? (
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setStatusFilter('all');
+                    }}
+                    className="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium border-2 border-blue-200 rounded-lg sm:rounded-xl hover:bg-blue-50 transition-colors cursor-pointer"
+                  >
+                    Clear filters
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleBrowseProjects}
+                      className="px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base bg-blue-600 text-white font-semibold rounded-lg sm:rounded-xl hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl cursor-pointer">
+                      {user?.role === 'freelancer' ? 'Browse Projects' : 'Post a Project'}
+                    </button>
+                    {user?.role === 'freelancer' && (
+                      <button className="px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base border-2 border-gray-300 text-gray-700 font-semibold rounded-lg sm:rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
+                        View Application Tips
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CurrentProjects;

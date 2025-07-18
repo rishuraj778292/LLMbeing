@@ -24,15 +24,15 @@ const Projectbar = () => {
     if (currentPath.startsWith('/manage-projects')) {
       if (user?.role === 'freelancer') {
         return [
-          { to: "/manage-projects/saved", label: "Saved", count: 12 },
-          { to: "/manage-projects/applied", label: "Applied", count: 8 },
-          { to: "/manage-projects/current", label: "Active", count: 3 },
-          { to: "/manage-projects/completed", label: "Completed", count: 27 },
+          { to: "/manage-projects/saved", label: "Saved", count: 0 },
+          { to: "/manage-projects/applied", label: "Applied", count: 0 },
+          { to: "/manage-projects/current", label: "Active", count: 0 },
+          { to: "/manage-projects/completed", label: "Completed", count: 0 },
         ];
       } else if (user?.role === 'client') {
         return [
-          { to: "/manage-projects/current", label: "Active Projects", count: 8 },
-          { to: "/manage-projects/completed", label: "Completed Projects", count: 37 },
+          { to: "/manage-projects/current", label: "Active Projects", count: 0 },
+          { to: "/manage-projects/completed", label: "Completed Projects", count: 0 },
         ];
       }
     }
@@ -96,17 +96,17 @@ const Projectbar = () => {
                       (location.pathname === '/manage-projects' && user?.role === 'client' && tab.to === '/manage-projects/current');
 
                     return `px-6 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-3 ${shouldHighlight
-                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-slate-200"
+                      ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-slate-200"
                       }`;
                   }}
                 >
                   <span>{tab.label}</span>
                   {tab.count > 0 && (
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${location.pathname.includes(tab.to.split('/').pop()) ||
-                        (location.pathname === '/manage-projects' && user?.role === 'client' && tab.to === '/manage-projects/current')
-                        ? "bg-white/20 text-white"
-                        : "bg-slate-200 text-slate-600"
+                      (location.pathname === '/manage-projects' && user?.role === 'client' && tab.to === '/manage-projects/current')
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-200 text-slate-600"
                       }`}>
                       {tab.count}
                     </span>
