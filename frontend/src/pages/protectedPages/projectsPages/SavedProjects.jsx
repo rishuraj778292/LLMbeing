@@ -8,6 +8,66 @@ const SavedProjects = () => {
   const [sortBy, setSortBy] = useState('saved-date');
   const navigate = useNavigate();
 
+  // Format location function
+  const formatLocation = (location) => {
+    if (!location) return "Remote";
+
+    // Handle new location object structure
+    if (typeof location === 'object') {
+      if (location.type === 'remote') return "Remote";
+      if (location.type === 'onsite' || location.type === 'hybrid') {
+        const parts = [];
+        if (location.city) parts.push(location.city);
+        if (location.country) parts.push(location.country);
+        if (parts.length > 0) {
+          return `${parts.join(', ')} (${location.type})`;
+        }
+        return location.type;
+      }
+      return "Remote";
+    }
+
+    // Legacy string format
+    return location || "Remote";
+  };
+
+  // Format budget function
+  const formatBudget = (budget) => {
+    if (!budget) return "Not specified";
+
+    // Handle new budget object structure
+    if (typeof budget === 'object') {
+      // For hourly projects
+      if (budget.hourlyRate) {
+        const { min, max } = budget.hourlyRate;
+        if (min && max) {
+          return `$${min.toLocaleString()}-$${max.toLocaleString()}/hr`;
+        } else if (min) {
+          return `$${min.toLocaleString()}+/hr`;
+        }
+        return "Hourly rate";
+      }
+
+      // For fixed price projects
+      if (budget.min !== undefined || budget.max !== undefined) {
+        if (budget.min && budget.max) {
+          return `$${budget.min.toLocaleString()}-$${budget.max.toLocaleString()}`;
+        } else if (budget.min) {
+          return `$${budget.min.toLocaleString()}+`;
+        } else if (budget.max) {
+          return `Up to $${budget.max.toLocaleString()}`;
+        }
+      }
+
+      return "Budget not specified";
+    }
+
+    // Legacy format handling
+    const numericBudget = typeof budget === 'number' ? budget : parseFloat(budget);
+    if (isNaN(numericBudget)) return budget;
+    return `$${numericBudget.toLocaleString()}`;
+  };
+
   // No saved projects currently
   const savedProjects = [];
 
@@ -128,14 +188,14 @@ const SavedProjects = () => {
                           {project.title}
                         </h3>
                         <div className="flex items-center bg-blue-50 px-3 py-1 rounded-full text-blue-600 font-medium whitespace-nowrap">
-                          ${project.budget?.toLocaleString() || 'Not specified'}
+                          {formatBudget(project.budget)}
                         </div>
                       </div>
 
                       <div className="flex items-center text-sm text-slate-500 mb-3">
                         <span className="hover:text-blue-500 transition-colors cursor-pointer">{project.clientName}</span>
                         <span className="mx-2 text-slate-300">•</span>
-                        <span>{project.location || "Remote"}</span>
+                        <span>{formatLocation(project.location)}</span>
                         <span className="mx-2 text-slate-300">•</span>
                         <span>Posted {new Date(project.postedAt).toLocaleDateString()}</span>
                       </div>

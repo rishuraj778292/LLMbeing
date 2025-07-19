@@ -17,7 +17,7 @@ import { useSelector, useDispatch } from "react-redux"
 import { verifyme } from "../Redux/Slice/authSlice"
 import Accountsetting from "./pages/protectedPages/Accountsetting"
 import ProjectsLayout from "./pages/protectedPages/projectsPages/ProjectsLayout"
-import FindProjectsPage from "./pages/protectedPages/projectsPages/FindProjectsPage"
+import FindProjectsPage from "./pages/FindProjectsPage"
 import SavedProjects from "./pages/protectedPages/projectsPages/SavedProjects"
 import AppliedProjects from "./pages/protectedPages/projectsPages/AppliedProjects"
 import CurrentProjects from "./pages/protectedPages/projectsPages/CurrentProjects"
@@ -27,6 +27,8 @@ import ContactUs from "./pages/ContactUs"
 import AboutUs from "./pages/AboutUs"
 import PrivacyPolicy from "./pages/PrivacyPolicy"
 import TermsOfUsePage from "./pages/TermsOfUsePage"
+import ProjectDetailsPage from "./pages/ProjectDetailsPage"
+import ProjectApplicationPage from "./pages/ProjectApplicationPage"
 
 function App() {
   const dispatch = useDispatch();
@@ -71,6 +73,8 @@ function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/account-setting" element={<Accountsetting />} />
           <Route path="/projects" element={<FindProjectsPage />} />
+          <Route path="/project/:slug" element={<ProjectDetailsPage />} />
+          <Route path="/project/:slug/apply" element={<ProjectApplicationPage />} />
           <Route path="/manage-projects" element={<ProjectsLayout />}>
             <Route index element={<CurrentProjects />} />
             <Route path="saved" element={<SavedProjects />} />
@@ -78,11 +82,11 @@ function App() {
             <Route path="current" element={<CurrentProjects />} />
             <Route path="completed" element={<CompletedProjects />} />
           </Route>
+          <Route path="/my-applications" element={<AppliedProjects />} />
           <Route path="/post-project" element={<ProjectPostingForm />} />
           <Route path="/gigs" element={<Gigs />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/profile" element={<Profile />} />
-
         </Route>
 
         <Route element={<AuthLayout />}>

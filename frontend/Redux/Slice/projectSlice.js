@@ -1,9 +1,7 @@
 // src/redux/slices/projectSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import projectService from '../../src/services/projectService';
 
-import axiosInstance from '../../UTILS/axiosInstance';
-
-console.log('projectSlice loaded');
 // Utility function to handle API errors
 const handleApiError = (error) => {
   const message =
@@ -13,165 +11,430 @@ const handleApiError = (error) => {
 
 // Async Thunks
 
+// Fetch all projects with filters
 export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
-  async ({ page = 1, limit = 10, filters = {} }, thunkAPI) => {
+  async (params, thunkAPI) => {
     try {
-      const query = new URLSearchParams({ page, limit, ...filters }).toString();
-      const response = await axiosInstance.get(`/api/v1/project/fetchprojects?${query}`, {
-        withCredentials: true,
-      });
-      return response.data.data;
+      const response = await projectService.getAllProjects(params);
+      return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(handleApiError(error));
     }
   }
 );
 
-export const fetchProjectBySlug = createAsyncThunk(
-  'projects/fetchProjectBySlug',
-  async (slug, thunkAPI) => {
+// Fetch project details
+export const fetchProjectDetails = createAsyncThunk(
+  'projects/fetchProjectDetails',
+  async (identifier, thunkAPI) => {
     try {
-      const response = await axiosInstance.get(`/api/v1/project/fetchprojectdetails/${slug}`, {
-        withCredentials: true,
-      });
-      return response.data.data;
+      const response = await projectService.getProjectDetails(identifier);
+      return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(handleApiError(error));
     }
   }
 );
 
+// Create new project
 export const createProject = createAsyncThunk(
   'projects/createProject',
   async (projectData, thunkAPI) => {
     try {
-      const response = await axiosInstance.post('/api/v1/project/post', projectData, {
-        withCredentials: true,
-      });
-      return response.data.data;
+      const response = await projectService.createProject(projectData);
+      return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(handleApiError(error));
     }
   }
 );
 
+// Update project
 export const updateProject = createAsyncThunk(
   'projects/updateProject',
-  async ({ id, updatedData }, thunkAPI) => {
+  async ({ projectId, updateData }, thunkAPI) => {
     try {
-      const response = await axiosInstance.put(`/api/v1/project/edit/${id}`, updatedData, {
-        withCredentials: true,
-      });
-      return response.data.data;
+      const response = await projectService.updateProject(projectId, updateData);
+      return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(handleApiError(error));
     }
   }
 );
 
+// Delete project
 export const deleteProject = createAsyncThunk(
   'projects/deleteProject',
-  async (id, thunkAPI) => {
+  async (projectId, thunkAPI) => {
     try {
-      await axiosInstance.delete(`/api/v1/project/delete/${id}`, {
-        withCredentials: true,
-      });
-      return id;
+      await projectService.deleteProject(projectId);
+      return projectId;
     } catch (error) {
       return thunkAPI.rejectWithValue(handleApiError(error));
     }
   }
 );
 
-// Slice
+// Get own projects
+export const fetchOwnProjects = createAsyncThunk(
+  'projects/fetchOwnProjects',
+  async (params, thunkAPI) => {
+    try {
+      const response = await projectService.getOwnProjects(params);
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(handleApiError(error));
+    }
+  }
+);
 
+// Toggle like
+export const toggleLike = createAsyncThunk(
+  'projects/toggleLike',
+  async (projectId, thunkAPI) => {
+    try {
+      const response = await projectService.toggleLike(projectId);
+      return { projectId, result: response.data };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Toggle dislike
+export const toggleDislike = createAsyncThunk(
+  'projects/toggleDislike',
+  async (projectId, thunkAPI) => {
+    try {
+      const response = await projectService.toggleDislike(projectId);
+      return { projectId, result: response.data };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Toggle bookmark
+export const toggleBookmark = createAsyncThunk(
+  'projects/toggleBookmark',
+  async (projectId, thunkAPI) => {
+    try {
+      const response = await projectService.toggleBookmark(projectId);
+      return { projectId, result: response.data };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Fetch liked projects
+export const fetchLikedProjects = createAsyncThunk(
+  'projects/fetchLikedProjects',
+  async (params, thunkAPI) => {
+    try {
+      const response = await projectService.getLikedProjects(params);
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Fetch bookmarked projects
+export const fetchBookmarkedProjects = createAsyncThunk(
+  'projects/fetchBookmarkedProjects',
+  async (params, thunkAPI) => {
+    try {
+      const response = await projectService.getBookmarkedProjects(params);
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Fetch trending projects
+export const fetchTrendingProjects = createAsyncThunk(
+  'projects/fetchTrendingProjects',
+  async (params, thunkAPI) => {
+    try {
+      const response = await projectService.getTrendingProjects(params);
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Initial state
+const initialState = {
+  projects: [],
+  currentProject: null,
+  ownProjects: [],
+  likedProjects: [],
+  bookmarkedProjects: [],
+  trendingProjects: [],
+  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  error: null,
+  page: 1,
+  totalPages: 1,
+  total: 0,
+  loadingMore: false,
+  filters: {
+    search: '',
+    categories: [],
+    skills: [],
+    experienceLevel: '',
+    projectType: '',
+    budgetMin: '',
+    budgetMax: '',
+    location: '',
+    sortBy: 'newest'
+  }
+};
+
+// Project slice
 const projectSlice = createSlice({
   name: 'projects',
-  initialState: {
-    projects: [],
-    selectedProject: null,
-    totalPages: 1,
-    page: 1,
-    status: 'idle',
-    error: null,
-    loadingMore: false,
+  initialState,
+  reducers: {
+    resetProjects: (state) => {
+      state.projects = [];
+      state.page = 1;
+      state.totalPages = 1;
+      state.total = 0;
+      state.error = null;
+    },
+    updateFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload };
+    },
+    clearCurrentProject: (state) => {
+      state.currentProject = null;
+    },
+    clearError: (state) => {
+      state.error = null;
+    },
+    // Update project interactions locally for optimistic updates
+    updateProjectInteraction: (state, action) => {
+      const { projectId, type, isActive } = action.payload;
+      const updateProjectInArray = (projectArray) => {
+        const project = projectArray.find(p => p._id === projectId);
+        if (project) {
+          if (type === 'like') {
+            project.isLiked = isActive;
+            project.likesCount = isActive ? project.likesCount + 1 : project.likesCount - 1;
+          } else if (type === 'dislike') {
+            project.isDisliked = isActive;
+            project.dislikesCount = isActive ? project.dislikesCount + 1 : project.dislikesCount - 1;
+          } else if (type === 'bookmark') {
+            project.isBookmarked = isActive;
+            project.bookmarksCount = isActive ? project.bookmarksCount + 1 : project.bookmarksCount - 1;
+          }
+        }
+      };
+
+      updateProjectInArray(state.projects);
+      if (state.currentProject && state.currentProject._id === projectId) {
+        if (type === 'like') {
+          state.currentProject.isLiked = isActive;
+          state.currentProject.likesCount = isActive ? state.currentProject.likesCount + 1 : state.currentProject.likesCount - 1;
+        } else if (type === 'dislike') {
+          state.currentProject.isDisliked = isActive;
+          state.currentProject.dislikesCount = isActive ? state.currentProject.dislikesCount + 1 : state.currentProject.dislikesCount - 1;
+        } else if (type === 'bookmark') {
+          state.currentProject.isBookmarked = isActive;
+          state.currentProject.bookmarksCount = isActive ? state.currentProject.bookmarksCount + 1 : state.currentProject.bookmarksCount - 1;
+        }
+      }
+    }
   },
-  reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch all projects
+      // Fetch Projects
       .addCase(fetchProjects.pending, (state, action) => {
-        const page = action.meta.arg?.page || 1; // Extract 'page' from action.meta.arg
-        if (page === 1) {
-            state.status = 'loading';
+        const isFirstPage = action.meta.arg?.page === 1 || !action.meta.arg?.page;
+        if (isFirstPage) {
+          state.status = 'loading';
+          state.projects = [];
         } else {
-            state.loadingMore = true;
+          state.loadingMore = true;
         }
-    })
-      .addCase(fetchProjects.fulfilled, (state, action) => {
-        const page = action.payload.page;
-      
-        if (page === 1) {
-          state.projects = action.payload.projects;
-          state.status = 'succeeded';
-        } else {
-          state.projects = [...state.projects, ...action.payload.projects];
-          state.loadingMore = false;
-        }
-      
-        state.page = page;
-        state.totalPages = action.payload.totalPages;
+        state.error = null;
       })
-      
-      .addCase(fetchProjects.rejected, (state, action) => {
-        const page = action.meta.arg?.page || 1;
+      .addCase(fetchProjects.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.loadingMore = false;
+        state.error = null;
+
+        const { projects, page, totalPages, total } = action.payload;
+
         if (page === 1) {
-          state.status = 'failed';
+          state.projects = projects;
         } else {
-          state.loadingMore = false;
+          state.projects.push(...projects);
         }
+
+        state.page = page;
+        state.totalPages = totalPages;
+        state.total = total;
+      })
+      .addCase(fetchProjects.rejected, (state, action) => {
+        state.status = 'failed';
+        state.loadingMore = false;
         state.error = action.payload;
       })
-      
-      // Fetch project by slug
-      .addCase(fetchProjectBySlug.pending, (state) => {
+
+      // Fetch Project Details
+      .addCase(fetchProjectDetails.pending, (state) => {
         state.status = 'loading';
+        state.error = null;
       })
-      .addCase(fetchProjectBySlug.fulfilled, (state, action) => {
+      .addCase(fetchProjectDetails.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.selectedProject = action.payload;
+        state.currentProject = action.payload;
+        state.error = null;
       })
-      .addCase(fetchProjectBySlug.rejected, (state, action) => {
+      .addCase(fetchProjectDetails.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        state.currentProject = null;
+      })
+
+      // Create Project
+      .addCase(createProject.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(createProject.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.ownProjects.unshift(action.payload);
+        state.projects.unshift(action.payload);
+        state.error = null;
+      })
+      .addCase(createProject.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
 
-      // Create project
-      .addCase(createProject.fulfilled, (state, action) => {
-        state.projects.unshift(action.payload);
-      })
-      .addCase(createProject.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-
-      // Update project
+      // Update Project
       .addCase(updateProject.fulfilled, (state, action) => {
-        const index = state.projects.findIndex((p) => p._id === action.payload._id);
-        if (index !== -1) state.projects[index] = action.payload;
+        const updatedProject = action.payload;
+
+        // Update in projects array
+        const projectIndex = state.projects.findIndex(p => p._id === updatedProject._id);
+        if (projectIndex !== -1) {
+          state.projects[projectIndex] = updatedProject;
+        }
+
+        // Update in own projects array
+        const ownProjectIndex = state.ownProjects.findIndex(p => p._id === updatedProject._id);
+        if (ownProjectIndex !== -1) {
+          state.ownProjects[ownProjectIndex] = updatedProject;
+        }
+
+        // Update current project if it's the same
+        if (state.currentProject && state.currentProject._id === updatedProject._id) {
+          state.currentProject = updatedProject;
+        }
       })
       .addCase(updateProject.rejected, (state, action) => {
         state.error = action.payload;
       })
 
-      // Delete project
+      // Delete Project
       .addCase(deleteProject.fulfilled, (state, action) => {
-        state.projects = state.projects.filter((p) => p._id !== action.payload);
+        const projectId = action.payload;
+        state.projects = state.projects.filter(p => p._id !== projectId);
+        state.ownProjects = state.ownProjects.filter(p => p._id !== projectId);
+
+        if (state.currentProject && state.currentProject._id === projectId) {
+          state.currentProject = null;
+        }
       })
       .addCase(deleteProject.rejected, (state, action) => {
         state.error = action.payload;
+      })
+
+      // Fetch Own Projects
+      .addCase(fetchOwnProjects.fulfilled, (state, action) => {
+        state.ownProjects = action.payload.projects || action.payload;
+      })
+      .addCase(fetchOwnProjects.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+      // Toggle Like
+      .addCase(toggleLike.fulfilled, (state, action) => {
+        const { projectId, result } = action.payload;
+        state.updateProjectInteraction = {
+          projectId,
+          type: 'like',
+          isActive: result.isLiked
+        };
+      })
+      .addCase(toggleLike.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+      // Toggle Dislike
+      .addCase(toggleDislike.fulfilled, (state, action) => {
+        const { projectId, result } = action.payload;
+        state.updateProjectInteraction = {
+          projectId,
+          type: 'dislike',
+          isActive: result.isDisliked
+        };
+      })
+      .addCase(toggleDislike.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+      // Toggle Bookmark
+      .addCase(toggleBookmark.fulfilled, (state, action) => {
+        const { projectId, result } = action.payload;
+        state.updateProjectInteraction = {
+          projectId,
+          type: 'bookmark',
+          isActive: result.isBookmarked
+        };
+      })
+      .addCase(toggleBookmark.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+      // Fetch Liked Projects
+      .addCase(fetchLikedProjects.fulfilled, (state, action) => {
+        state.likedProjects = action.payload.projects || action.payload;
+      })
+      .addCase(fetchLikedProjects.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+      // Fetch Bookmarked Projects
+      .addCase(fetchBookmarkedProjects.fulfilled, (state, action) => {
+        state.bookmarkedProjects = action.payload.projects || action.payload;
+      })
+      .addCase(fetchBookmarkedProjects.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+      // Fetch Trending Projects
+      .addCase(fetchTrendingProjects.fulfilled, (state, action) => {
+        state.trendingProjects = action.payload.projects || action.payload;
+      })
+      .addCase(fetchTrendingProjects.rejected, (state, action) => {
+        state.error = action.payload;
       });
-  },
+  }
 });
+
+export const {
+  resetProjects,
+  updateFilters,
+  clearCurrentProject,
+  clearError,
+  updateProjectInteraction
+} = projectSlice.actions;
 
 export default projectSlice.reducer;

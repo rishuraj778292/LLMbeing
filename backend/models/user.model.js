@@ -298,15 +298,15 @@ const userSchema = new Schema({
         default: [],
         ref: 'Project',
     },
-    activeProjects:{
-        type:[Schema.Types.ObjectId],
-        default:[],
-        ref:'Projects',
+    activeProjects: {
+        type: [Schema.Types.ObjectId],
+        default: [],
+        ref: 'Project',
     },
-    completedProjects:{
-        type:[Schema.Types.ObjectId],
-        ref:'Projects',
-        default:[],
+    completedProjects: {
+        type: [Schema.Types.ObjectId],
+        ref: 'Project',
+        default: [],
     }
 
 
@@ -354,5 +354,5 @@ userSchema.methods.generateRefreshToken = function (remember) {
             { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
     )
 }
-const User = mongoose.model('user', userSchema);
+const User = mongoose.model('User', userSchema);
 export default User

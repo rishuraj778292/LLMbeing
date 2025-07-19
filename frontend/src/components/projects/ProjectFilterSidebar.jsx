@@ -1,116 +1,100 @@
 
-import { useState } from 'react';
-import { Search, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Filter,
+  X,
+  ChevronDown,
+  ChevronUp,
+  DollarSign,
+  MapPin,
+  Briefcase,
+  Star,
+  Clock,
+  Code
+} from 'lucide-react';
 
-const ProjectFilterSidebar = () => {
-
-  
-
-  const [filters, setFilters] = useState({
-    search: '',
-    projectCategory: [],
-    experienceLevel: [],
-    projectType: [],
-    projectStatus: [],
-    budget: [],
-    currency: 'INR',
-    skillsRequired: ''
-  });
-
+const ProjectFilterSidebar = ({ filters, onFilterChange, onClearAll, activeFiltersCount }) => {
   const [expandedSections, setExpandedSections] = useState({
-    category: true,
+    categories: true,
+    skills: true,
     experience: true,
     type: true,
-    status: true,
-    budget: true
+    budget: true,
+    location: false
   });
 
+  // Safety check for filters prop
+  if (!filters) {
+    return <div className="p-4">Loading filters...</div>;
+  }
+
   const projectCategories = [
-    { value: 'ai_chatbots', label: 'AI Chatbots' },
-    { value: 'prompt_engineering', label: 'Prompt Engineering' },
-    { value: 'process_automation', label: 'Process Automation' },
-    { value: 'api_integration', label: 'API Integration' },
-    { value: 'document_processing', label: 'Document Processing' },
-    { value: 'search_analytics', label: 'Search Analytics' },
-    { value: 'nlp_classification', label: 'NLP Classification' },
-    { value: 'business_intelligence', label: 'Business Intelligence' },
-    { value: 'data_labeling', label: 'Data Labeling' },
-    { value: 'research_legal_ai', label: 'Research Legal AI' },
-    { value: 'media_production', label: 'Media Production' },
-    { value: 'voice_technology', label: 'Voice Technology' },
-    { value: 'translation_localization', label: 'Translation & Localization' },
-    { value: 'generative_design', label: 'Generative Design' },
-    { value: 'content_marketing', label: 'Content Marketing' },
-    { value: 'product_development', label: 'Product Development' },
-    { value: 'edtech_solutions', label: 'EdTech Solutions' },
-    { value: 'ai_consulting', label: 'AI Consulting' },
-    { value: 'security_compliance', label: 'Security & Compliance' }
+    'Web Development',
+    'Mobile Development',
+    'AI & Machine Learning',
+    'Data Science',
+    'UI/UX Design',
+    'Content Writing',
+    'Digital Marketing',
+    'Video Editing',
+    'Graphic Design',
+    'SEO',
+    'Social Media',
+    'Translation',
+    'Blockchain',
+    'DevOps',
+    'Cybersecurity',
+    'Game Development',
+    'E-commerce',
+    'WordPress',
+    'Photography',
+    'Virtual Assistant'
+  ];
+
+  const popularSkills = [
+    'JavaScript',
+    'React',
+    'Node.js',
+    'Python',
+    'PHP',
+    'WordPress',
+    'HTML/CSS',
+    'Vue.js',
+    'Angular',
+    'MongoDB',
+    'MySQL',
+    'Photoshop',
+    'Figma',
+    'AWS',
+    'Docker',
+    'TensorFlow',
+    'Flutter',
+    'React Native',
+    'Laravel',
+    'Django'
   ];
 
   const experienceLevels = [
-    { value: 'Beginner', label: 'Beginner' },
-    { value: 'Intermediate', label: 'Intermediate' },
-    { value: 'Expert', label: 'Expert' }
+    { value: 'entry', label: 'Entry Level' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'expert', label: 'Expert' }
   ];
 
   const projectTypes = [
-    { value: 'one_time', label: 'One Time' },
-    { value: 'hourly', label: 'Hourly' },
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'ongoing', label: 'Ongoing' }
-  ];
-
-  const projectStatuses = [
-    { value: 'pending', label: 'Pending' },
-    { value: 'interviewing', label: 'Interviewing' },
-    { value: 'completed', label: 'Completed' }
+    { value: 'fixed', label: 'Fixed Price' },
+    { value: 'hourly', label: 'Hourly Rate' },
+    { value: 'contract', label: 'Contract' },
+    { value: 'full-time', label: 'Full Time' },
+    { value: 'part-time', label: 'Part Time' }
   ];
 
   const budgetRanges = [
-    { value: '0k to 10k', label: '₹0k - ₹10k' },
-    { value: '10k to 20k', label: '₹10k - ₹20k' },
-    { value: '20k to 30k', label: '₹20k - ₹30k' },
-    { value: '30k-40k', label: '₹30k - ₹40k' },
-    { value: '40k-50k', label: '₹40k - ₹50k' },
-    { value: 'Above 50k', label: 'Above ₹50k' }
+    { min: '', max: '500', label: 'Under $500' },
+    { min: '500', max: '1000', label: '$500 - $1,000' },
+    { min: '1000', max: '5000', label: '$1,000 - $5,000' },
+    { min: '5000', max: '10000', label: '$5,000 - $10,000' },
+    { min: '10000', max: '', label: '$10,000+' }
   ];
-
-  const currencies = [
-    { value: 'INR', label: '₹ INR' },
-    { value: 'USD', label: '$ USD' },
-    { value: 'EUR', label: '€ EUR' }
-  ];
-
-  const handleFilterChange = (filterType, value) => {
-    if (Array.isArray(filters[filterType])) {
-      const newValues = filters[filterType].includes(value)
-        ? filters[filterType].filter(item => item !== value)
-        : [...filters[filterType], value];
-
-      setFilters(prev => ({
-        ...prev,
-        [filterType]: newValues
-      }));
-    } else {
-      setFilters(prev => ({
-        ...prev,
-        [filterType]: value
-      }));
-    }
-  };
-
-  const clearAllFilters = () => {
-    setFilters({
-      search: '',
-      projectCategory: [],
-      experienceLevel: [],
-      projectType: [],
-      projectStatus: [],
-      budget: [],
-      currency: 'INR',
-      skillsRequired: ''
-    });
-  };
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -119,63 +103,93 @@ const ProjectFilterSidebar = () => {
     }));
   };
 
-  const getActiveFilterCount = () => {
-    let count = 0;
-    if (filters.search) count++;
-    if (filters.skillsRequired) count++;
-    count += filters.projectCategory.length;
-    count += filters.experienceLevel.length;
-    count += filters.projectType.length;
-    count += filters.projectStatus.length;
-    count += filters.budget.length;
-    if (filters.currency !== 'INR') count++;
-    return count;
+  const handleArrayFilterChange = (filterType, value) => {
+    const currentValues = filters[filterType] || [];
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter(item => item !== value)
+      : [...currentValues, value];
+
+    onFilterChange({ [filterType]: newValues });
   };
 
-  const FilterSection = ({ title, isExpanded, onToggle, children }) => (
-    <div className="border-b border-slate-100 pb-3">
+  const handleBudgetChange = (min, max) => {
+    onFilterChange({ budgetMin: min, budgetMax: max });
+  };
+
+  const isBudgetRangeSelected = (min, max) => {
+    return filters?.budgetMin === min && filters?.budgetMax === max;
+  };
+
+  const FilterSection = ({ title, icon: Icon, isExpanded, onToggle, children }) => (
+    <div className="border-b border-gray-200 last:border-b-0">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full text-left font-medium text-slate-900 hover:text-blue-600 transition-colors text-sm"
+        className="flex items-center justify-between w-full p-4 text-left hover:bg-gray-50 transition-colors"
       >
-        <span>{title}</span>
-        {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        <div className="flex items-center space-x-3">
+          {Icon && <Icon className="h-5 w-5 text-gray-400" />}
+          <span className="font-medium text-gray-900">{title}</span>
+        </div>
+        {isExpanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
       </button>
-      {isExpanded && <div className="mt-2 space-y-2">{children}</div>}
+      {isExpanded && (
+        <div className="px-4 pb-4 space-y-2">
+          {children}
+        </div>
+      )}
     </div>
   );
 
-  const CheckboxOption = ({ value, label, checked, onChange }) => (
-    <label className="flex items-center space-x-2 cursor-pointer group">
+  const CheckboxOption = ({ value, label, checked, onChange, count }) => (
+    <label className="flex items-center justify-between cursor-pointer group hover:bg-gray-50 rounded px-2 py-1">
+      <div className="flex items-center space-x-3">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={() => onChange(value)}
+          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        />
+        <span className="text-sm text-gray-700 group-hover:text-gray-900">
+          {label}
+        </span>
+      </div>
+      {count && (
+        <span className="text-xs text-gray-400">{count}</span>
+      )}
+    </label>
+  );
+
+  const RadioOption = ({ value, label, checked, onChange }) => (
+    <label className="flex items-center cursor-pointer group hover:bg-gray-50 rounded px-2 py-1">
       <input
-        type="checkbox"
+        type="radio"
         checked={checked}
         onChange={() => onChange(value)}
-        className="w-3 h-3 text-blue-600 border-slate-300 rounded focus:ring-blue-500 focus:ring-1"
+        className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
       />
-      <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
+      <span className="ml-3 text-sm text-gray-700 group-hover:text-gray-900">
         {label}
       </span>
     </label>
   );
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg h-fit sticky top-6">
+    <div className="bg-white rounded-lg border border-gray-200 sticky top-6">
       {/* Header */}
-      <div className="p-4 border-b border-slate-200">
-        <div className="flex items-center justify-between mb-3">
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Filter className="text-blue-600" size={18} />
-            <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
+            <Filter className="h-5 w-5 text-blue-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
           </div>
-          {getActiveFilterCount() > 0 && (
+          {activeFiltersCount > 0 && (
             <div className="flex items-center space-x-2">
-              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-                {getActiveFilterCount()}
+              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+                {activeFiltersCount}
               </span>
               <button
-                onClick={clearAllFilters}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                onClick={onClearAll}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
                 Clear All
               </button>
@@ -184,120 +198,187 @@ const ProjectFilterSidebar = () => {
         </div>
       </div>
 
-      {/* Filter Content */}
-      <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
-        {/* Project Category */}
+      {/* Filter Sections */}
+      <div className="max-h-[70vh] overflow-y-auto">
+        {/* Categories */}
         <FilterSection
-          title="Project Category"
-          isExpanded={expandedSections.category}
-          onToggle={() => toggleSection('category')}
+          title="Categories"
+          icon={Briefcase}
+          isExpanded={expandedSections.categories}
+          onToggle={() => toggleSection('categories')}
         >
-          <div className="max-h-40 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-slate-300">
-            {projectCategories.slice(0, 8).map((category) => (
+          <div className="max-h-48 overflow-y-auto space-y-1">
+            {projectCategories.map((category) => (
               <CheckboxOption
-                key={category.value}
-                value={category.value}
-                label={category.label}
-                checked={filters.projectCategory.includes(category.value)}
-                onChange={(value) => handleFilterChange('projectCategory', value)}
+                key={category}
+                value={category}
+                label={category}
+                checked={filters.categories?.includes(category) || false}
+                onChange={(value) => handleArrayFilterChange('categories', value)}
               />
             ))}
+          </div>
+        </FilterSection>
+
+        {/* Skills */}
+        <FilterSection
+          title="Skills"
+          icon={Code}
+          isExpanded={expandedSections.skills}
+          onToggle={() => toggleSection('skills')}
+        >
+          <div className="max-h-48 overflow-y-auto space-y-1">
+            {popularSkills.map((skill) => (
+              <CheckboxOption
+                key={skill}
+                value={skill}
+                label={skill}
+                checked={filters.skills?.includes(skill) || false}
+                onChange={(value) => handleArrayFilterChange('skills', value)}
+              />
+            ))}
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <input
+              type="text"
+              placeholder="Add custom skill..."
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && e.target.value.trim()) {
+                  handleArrayFilterChange('skills', e.target.value.trim());
+                  e.target.value = '';
+                }
+              }}
+            />
+            <p className="text-xs text-gray-500 mt-1">Press Enter to add</p>
           </div>
         </FilterSection>
 
         {/* Experience Level */}
         <FilterSection
           title="Experience Level"
+          icon={Star}
           isExpanded={expandedSections.experience}
           onToggle={() => toggleSection('experience')}
         >
-          {experienceLevels.map((level) => (
-            <CheckboxOption
-              key={level.value}
-              value={level.value}
-              label={level.label}
-              checked={filters.experienceLevel.includes(level.value)}
-              onChange={(value) => handleFilterChange('experienceLevel', value)}
-            />
-          ))}
+          <div className="space-y-1">
+            {experienceLevels.map((level) => (
+              <RadioOption
+                key={level.value}
+                value={level.value}
+                label={level.label}
+                checked={filters?.experienceLevel === level.value}
+                onChange={(value) => onFilterChange({ experienceLevel: value })}
+              />
+            ))}
+            {filters?.experienceLevel && (
+              <button
+                onClick={() => onFilterChange({ experienceLevel: '' })}
+                className="text-xs text-blue-600 hover:text-blue-700 mt-2"
+              >
+                Clear selection
+              </button>
+            )}
+          </div>
         </FilterSection>
 
         {/* Project Type */}
         <FilterSection
           title="Project Type"
+          icon={Clock}
           isExpanded={expandedSections.type}
           onToggle={() => toggleSection('type')}
         >
-          {projectTypes.map((type) => (
-            <CheckboxOption
-              key={type.value}
-              value={type.value}
-              label={type.label}
-              checked={filters.projectType.includes(type.value)}
-              onChange={(value) => handleFilterChange('projectType', value)}
-            />
-          ))}
+          <div className="space-y-1">
+            {projectTypes.map((type) => (
+              <RadioOption
+                key={type.value}
+                value={type.value}
+                label={type.label}
+                checked={filters?.projectType === type.value}
+                onChange={(value) => onFilterChange({ projectType: value })}
+              />
+            ))}
+            {filters?.projectType && (
+              <button
+                onClick={() => onFilterChange({ projectType: '' })}
+                className="text-xs text-blue-600 hover:text-blue-700 mt-2"
+              >
+                Clear selection
+              </button>
+            )}
+          </div>
         </FilterSection>
 
         {/* Budget Range */}
         <FilterSection
           title="Budget Range"
+          icon={DollarSign}
           isExpanded={expandedSections.budget}
           onToggle={() => toggleSection('budget')}
         >
-          {budgetRanges.map((budget) => (
-            <CheckboxOption
-              key={budget.value}
-              value={budget.value}
-              label={budget.label}
-              checked={filters.budget.includes(budget.value)}
-              onChange={(value) => handleFilterChange('budget', value)}
-            />
-          ))}
+          <div className="space-y-2">
+            {budgetRanges.map((range) => (
+              <RadioOption
+                key={`${range.min}-${range.max}`}
+                value={`${range.min}-${range.max}`}
+                label={range.label}
+                checked={isBudgetRangeSelected(range.min, range.max)}
+                onChange={() => handleBudgetChange(range.min, range.max)}
+              />
+            ))}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Custom Range
+            </label>
+            <div className="flex space-x-2">
+              <input
+                type="number"
+                placeholder="Min"
+                value={filters?.budgetMin || ''}
+                onChange={(e) => onFilterChange({ budgetMin: e.target.value })}
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <span className="self-center text-gray-500">-</span>
+              <input
+                type="number"
+                placeholder="Max"
+                value={filters?.budgetMax || ''}
+                onChange={(e) => onFilterChange({ budgetMax: e.target.value })}
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
         </FilterSection>
 
-        {/* Currency */}
-        <div className="border-b border-slate-100 pb-3">
-          <h3 className="font-medium text-slate-900 mb-2 text-sm">Currency</h3>
-          <select
-            value={filters.currency}
-            onChange={(e) => handleFilterChange('currency', e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {currencies.map((currency) => (
-              <option key={currency.value} value={currency.value}>
-                {currency.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Skills Required */}
-        <div>
-          <label className="block font-medium text-slate-900 mb-2 text-sm">
-            Skills Required
-          </label>
+        {/* Location */}
+        <FilterSection
+          title="Location"
+          icon={MapPin}
+          isExpanded={expandedSections.location}
+          onToggle={() => toggleSection('location')}
+        >
           <input
             type="text"
-            placeholder="e.g. React, Node.js, Python"
-            value={filters.skillsRequired}
-            onChange={(e) => handleFilterChange('skillsRequired', e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter location..."
+            value={filters?.location || ''}
+            onChange={(e) => onFilterChange({ location: e.target.value })}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
-          <p className="text-xs text-slate-500 mt-1">
-            Separate multiple skills with commas
-          </p>
-        </div>
-      </div>
-
-      {/* Apply Filters Button */}
-      <div className="p-4 border-t border-slate-200">
-        <button
-          onClick={() => console.log('Applied filters:', filters)}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
-        >
-          Apply Filters
-        </button>
+          <div className="mt-2 space-y-1">
+            {['Remote', 'United States', 'United Kingdom', 'Canada', 'Australia', 'India', 'Germany'].map((location) => (
+              <button
+                key={location}
+                onClick={() => onFilterChange({ location })}
+                className="block w-full text-left px-2 py-1 text-sm text-gray-600 hover:bg-gray-50 rounded"
+              >
+                {location}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
       </div>
     </div>
   );

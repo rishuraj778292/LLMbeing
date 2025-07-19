@@ -24,12 +24,14 @@ import authRouter from './routes/auth.route.js';
 import projectRouter from './routes/project.route.js';
 import gigsRouter from './routes/gigs.route.js';
 import profileRouter from './routes/profile.route.js';
+import applicationRouter from './routes/application.route.js';
 
 // routes decleration
 app.use("/api/v1/user", authRouter);
 app.use("/api/v1/user", profileRouter);
 app.use("/api/v1/project", projectRouter);
 app.use("/api/v1/gig", gigsRouter);
+app.use("/api/v1/applications", applicationRouter);
 
 // error handling
 app.use(handleError)
