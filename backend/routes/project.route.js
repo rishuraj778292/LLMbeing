@@ -6,11 +6,6 @@ import {
     getAllProjects,
     getProjectDetails,
     getOwnProjects,
-    toggleLike,
-    toggleDislike,
-    toggleBookmark,
-    getLikedProjects,
-    getBookmarkedProjects,
     updateProjectStatus,
     getTrendingProjects,
     getMostLikedProjects
@@ -35,14 +30,10 @@ router.put("/:projectId", verifyAccess, updateProject); // PUT /api/projects/60d
 router.delete("/:projectId", verifyAccess, deleteProject); // DELETE /api/projects/60d21bb67c...
 router.put("/:projectId/status", verifyAccess, updateProjectStatus); // PUT /api/projects/60d21bb67c.../status
 
-// Freelancer-only routes (authentication + freelancer role required)
-router.post("/:projectId/like", verifyToken, toggleLike); // POST /api/projects/60d21bb67c.../like
-router.post("/:projectId/dislike", verifyToken, toggleDislike); // POST /api/projects/60d21bb67c.../dislike
-router.post("/:projectId/bookmark", verifyToken, toggleBookmark); // POST /api/projects/60d21bb67c.../bookmark
-
-// Freelancer interaction routes
-router.get("/my/liked", verifyToken, getLikedProjects); // GET /api/projects/my/liked
-router.get("/my/bookmarked", verifyToken, getBookmarkedProjects); // GET /api/projects/my/bookmarked
+// Note: Project interactions (like/dislike/save) are handled by separate controllers:
+// - likeProject.controller.js
+// - dislikeProject.controller.js  
+// - savedProject.controller.js
 
 export default router;
 

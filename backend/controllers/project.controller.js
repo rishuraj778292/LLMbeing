@@ -20,9 +20,6 @@ const createProject = asyncHandler(async (req, res) => {
   const project = await Project.create(projectData);
   if (!project) throw new ApiError(400, "Project creation failed");
 
-  // Add audit log
-  await project.addAuditLog('created', req.user._id, { initialData: projectData });
-
   res.status(201).send(new ApiResponse(201, project, "Project created successfully"));
 });
 
@@ -50,9 +47,6 @@ const updateProject = asyncHandler(async (req, res) => {
     { new: true, runValidators: true }
   ).populate("client", "fullName email avatar");
 
-  // Add audit log
-  await updatedProject.addAuditLog('updated', req.user._id, { changes: updateData });
-
   res.status(200).send(new ApiResponse(200, updatedProject, "Project updated successfully"));
 });
 
@@ -68,8 +62,10 @@ const deleteProject = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You can only delete your own projects");
   }
 
-  // Soft delete
-  await project.softDelete(req.user._id);
+  // Soft delete - just deactivate the project
+  project.isActive = false;
+  project.projectStatus = 'cancelled';
+  await project.save();
 
   res.status(200).send(new ApiResponse(200, {}, "Project deleted successfully"));
 });
@@ -120,8 +116,7 @@ const getAllProjects = asyncHandler(async (req, res) => {
   }
 
   if (budgetMin || budgetMax) {
-    filters['budget.min'] = {};
-    if (budgetMin) filters['budget.min'].$gte = parseInt(budgetMin);
+    if (budgetMin) filters['budget.min'] = { $gte: parseInt(budgetMin) };
     if (budgetMax) filters['budget.max'] = { $lte: parseInt(budgetMax) };
   }
 
@@ -169,18 +164,9 @@ const getAllProjects = asyncHandler(async (req, res) => {
     .skip((page - 1) * limit)
     .limit(limit);
 
-  // Add user interaction data if user is logged in
+  // Add user interaction data if user is logged in - remove this as it should be handled separately
   let projectsWithInteractions = projects;
-  if (req.user) {
-    projectsWithInteractions = projects.map(project => {
-      const interaction = project.getUserInteraction(req.user._id);
-
-      return {
-        ...project.toObject(),
-        userInteraction: interaction
-      };
-    });
-  }
+  // Note: User interactions (like, dislike, save) should be fetched separately from interaction controllers
 
   res.status(200).send(new ApiResponse(200, {
     total,
@@ -217,11 +203,9 @@ const getProjectDetails = asyncHandler(async (req, res) => {
     await project.save();
   }
 
-  // Add user interaction data if user is logged in
+  // Add user interaction data if user is logged in - remove this as it should be handled separately
   let projectData = project.toObject();
-  if (req.user) {
-    projectData.userInteraction = project.getUserInteraction(req.user._id);
-  }
+  // Note: User interactions (like, dislike, save) should be fetched separately from interaction controllers
 
   res.status(200).send(new ApiResponse(200, projectData, "Project details fetched successfully"));
 });
@@ -253,134 +237,6 @@ const getOwnProjects = asyncHandler(async (req, res) => {
   }, "Your projects fetched successfully"));
 });
 
-// POST: Like/Unlike project (Freelancers only)
-const toggleLike = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'freelancer') {
-    throw new ApiError(403, "Only freelancers can like projects");
-  }
-
-  const { projectId } = req.params;
-
-  let project;
-  if (projectId.match(/^[0-9a-fA-F]{24}$/)) {
-    // It's an ObjectId
-    project = await Project.findById(projectId);
-  } else {
-    // It's a slug
-    project = await Project.findOne({ slug: projectId });
-  }
-
-  if (!project) throw new ApiError(404, "Project not found");
-
-  const result = project.toggleLike(req.user._id);
-  await project.save();
-
-  // Add audit log
-  await project.addAuditLog(result.action, req.user._id);
-
-  res.status(200).send(new ApiResponse(200, result, `Project ${result.action} successfully`));
-});
-
-// POST: Dislike/Remove dislike project (Freelancers only)
-const toggleDislike = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'freelancer') {
-    throw new ApiError(403, "Only freelancers can dislike projects");
-  }
-
-  const { projectId } = req.params;
-
-  let project;
-  if (projectId.match(/^[0-9a-fA-F]{24}$/)) {
-    // It's an ObjectId
-    project = await Project.findById(projectId);
-  } else {
-    // It's a slug
-    project = await Project.findOne({ slug: projectId });
-  }
-
-  if (!project) throw new ApiError(404, "Project not found");
-
-  const result = project.toggleDislike(req.user._id);
-  await project.save();
-
-  // Add audit log
-  await project.addAuditLog(result.action, req.user._id);
-
-  res.status(200).send(new ApiResponse(200, result, `Project ${result.action} successfully`));
-});
-
-// POST: Bookmark/Unbookmark project (Freelancers only)
-const toggleBookmark = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'freelancer') {
-    throw new ApiError(403, "Only freelancers can bookmark projects");
-  }
-
-  const { projectId } = req.params;
-
-  let project;
-  if (projectId.match(/^[0-9a-fA-F]{24}$/)) {
-    // It's an ObjectId
-    project = await Project.findById(projectId);
-  } else {
-    // It's a slug
-    project = await Project.findOne({ slug: projectId });
-  }
-
-  if (!project) throw new ApiError(404, "Project not found");
-
-  const result = project.toggleBookmark(req.user._id);
-  await project.save();
-
-  // Add audit log
-  await project.addAuditLog(result.action, req.user._id);
-
-  res.status(200).send(new ApiResponse(200, result, `Project ${result.action} successfully`));
-});
-
-// GET: Get user's liked projects (Freelancers only)
-const getLikedProjects = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'freelancer') {
-    throw new ApiError(403, "Only freelancers can access liked projects");
-  }
-
-  const { page = 1, limit = 10 } = req.query;
-
-  const projects = await Project.getUserLikedProjects(req.user._id, parseInt(limit))
-    .populate("client", "fullName email avatar company")
-    .skip((parseInt(page) - 1) * parseInt(limit));
-
-  const total = await Project.countDocuments({ 'interactions.likes.user': req.user._id });
-
-  res.status(200).send(new ApiResponse(200, {
-    total,
-    page: parseInt(page),
-    totalPages: Math.ceil(total / parseInt(limit)),
-    projects,
-  }, "Liked projects fetched successfully"));
-});
-
-// GET: Get user's bookmarked projects (Freelancers only)
-const getBookmarkedProjects = asyncHandler(async (req, res) => {
-  if (req.user.role !== 'freelancer') {
-    throw new ApiError(403, "Only freelancers can access bookmarked projects");
-  }
-
-  const { page = 1, limit = 10 } = req.query;
-
-  const projects = await Project.getUserBookmarkedProjects(req.user._id, parseInt(limit))
-    .populate("client", "fullName email avatar company")
-    .skip((parseInt(page) - 1) * parseInt(limit));
-
-  const total = await Project.countDocuments({ 'interactions.bookmarks.user': req.user._id });
-
-  res.status(200).send(new ApiResponse(200, {
-    total,
-    page: parseInt(page),
-    totalPages: Math.ceil(total / parseInt(limit)),
-    projects,
-  }, "Bookmarked projects fetched successfully"));
-});
-
 // PUT: Update project status (Client only - own projects)
 const updateProjectStatus = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
@@ -401,9 +257,6 @@ const updateProjectStatus = asyncHandler(async (req, res) => {
 
   project.projectStatus = status;
   await project.save();
-
-  // Add audit log
-  await project.addAuditLog('status_changed', req.user._id, { newStatus: status });
 
   res.status(200).send(new ApiResponse(200, project, "Project status updated successfully"));
 });
@@ -434,11 +287,6 @@ export {
   getAllProjects,
   getProjectDetails,
   getOwnProjects,
-  toggleLike,
-  toggleDislike,
-  toggleBookmark,
-  getLikedProjects,
-  getBookmarkedProjects,
   updateProjectStatus,
   getTrendingProjects,
   getMostLikedProjects

@@ -224,6 +224,25 @@ const userSchema = new Schema({
         type: Boolean,
         default: false,
     },
+
+    // OTP verification fields
+    emailOTP: {
+        type: String,
+        default: null,
+    },
+    emailOTPExpires: {
+        type: Date,
+        default: null,
+    },
+    passwordResetOTP: {
+        type: String,
+        default: null,
+    },
+    passwordResetOTPExpires: {
+        type: Date,
+        default: null,
+    },
+
     isPhoneVerified: {
         type: Boolean,
         default: false,
@@ -235,10 +254,6 @@ const userSchema = new Schema({
 
     // Statistics
     totalEarnings: {
-        type: Number,
-        default: 0,
-    },
-    completedProjects: {
         type: Number,
         default: 0,
     },
@@ -292,21 +307,31 @@ const userSchema = new Schema({
         default: [],
         ref: 'Project',
     },
+    likedProjects: {
+        type: [Schema.Types.ObjectId],
+        default: [],
+        ref: 'Project',
+    },
+    dislikedProjects: {
+        type: [Schema.Types.ObjectId],
+        default: [],
+        ref: 'Project',
+    },
 
     appliedProjects: {
         type: [Schema.Types.ObjectId],
         default: [],
         ref: 'Project',
     },
-    activeProjects:{
-        type:[Schema.Types.ObjectId],
-        default:[],
-        ref:'Projects',
+    activeProjects: {
+        type: [Schema.Types.ObjectId],
+        default: [],
+        ref: 'Project',
     },
-    completedProjects:{
-        type:[Schema.Types.ObjectId],
-        ref:'Projects',
-        default:[],
+    completedProjects: {
+        type: [Schema.Types.ObjectId],
+        ref: 'Project',
+        default: [],
     }
 
 
@@ -329,13 +354,13 @@ userSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password)
 }
 
-userSchema.methods.generateAcessToken = function () {
+userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
             email: this.email,
-            username: this.username,
-            fullname: this.fullname,
+            userName: this.userName,
+            fullName: this.fullName,
             role: this.role,
         },
         process.env.ACCESS_TOKEN_SECRET,
@@ -345,7 +370,7 @@ userSchema.methods.generateAcessToken = function () {
 
 userSchema.methods.generateRefreshToken = function (remember) {
     return jwt.sign({
-        _id: this.id
+        _id: this._id
     },
         process.env.REFRESH_TOKEN_SECRET,
         remember ?
@@ -353,6 +378,108 @@ userSchema.methods.generateRefreshToken = function (remember) {
             :
             { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
     )
+}
+
+// Generate password reset token
+userSchema.methods.generatePasswordResetToken = function () {
+    const resetToken = jwt.sign(
+        { _id: this._id, purpose: 'password-reset' },
+        process.env.RESET_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET, // Use dedicated secret or fallback
+        { expiresIn: '10m' } // 10 minutes expiration
+    );
+
+    // Store the token in database for verification
+    this.resetPasswordToken = resetToken;
+
+    return resetToken;
+}
+
+// Generate email verification OTP
+userSchema.methods.generateEmailOTP = function () {
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Set OTP and expiration (10 minutes)
+    this.emailOTP = otp;
+    this.emailOTPExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    return otp;
+}
+
+// Generate password reset OTP
+userSchema.methods.generatePasswordResetOTP = function () {
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Set OTP and expiration (10 minutes)
+    this.passwordResetOTP = otp;
+    this.passwordResetOTPExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    return otp;
+}
+
+// Verify email OTP
+userSchema.methods.verifyEmailOTP = function (otp) {
+    if (!this.emailOTP || !this.emailOTPExpires) {
+        return false;
+    }
+
+    if (this.emailOTPExpires < new Date()) {
+        // OTP expired
+        this.emailOTP = null;
+        this.emailOTPExpires = null;
+        return false;
+    }
+
+    if (this.emailOTP === otp) {
+        // OTP is valid, clear it and mark email as verified
+        this.emailOTP = null;
+        this.emailOTPExpires = null;
+        this.isEmailVerified = true;
+        return true;
+    }
+
+    return false;
+}
+
+// Verify password reset OTP
+userSchema.methods.verifyPasswordResetOTP = function (otp) {
+    if (!this.passwordResetOTP || !this.passwordResetOTPExpires) {
+        return false;
+    }
+
+    if (this.passwordResetOTPExpires < new Date()) {
+        // OTP expired
+        this.passwordResetOTP = null;
+        this.passwordResetOTPExpires = null;
+        return false;
+    }
+
+    if (this.passwordResetOTP === otp) {
+        // OTP is valid, clear it
+        this.passwordResetOTP = null;
+        this.passwordResetOTPExpires = null;
+        return true;
+    }
+
+    return false;
+}
+
+// Verify password reset token
+userSchema.statics.findByResetToken = function (token) {
+    try {
+        // Verify the JWT token
+        const decoded = jwt.verify(token, process.env.RESET_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET);
+
+        // Find user with matching token and ensure it's for password reset
+        return this.findOne({
+            _id: decoded._id,
+            resetPasswordToken: token
+        });
+    } catch (error) {
+        // Token is invalid or expired
+        return null;
+    }
 }
 const User = mongoose.model('user', userSchema);
 export default User

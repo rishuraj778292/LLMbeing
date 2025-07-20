@@ -387,7 +387,7 @@ const FindProjectsPage = () => {
                                     {projects
                                         .filter(project => {
                                             // For freelancers, filter out applied projects
-                                            if (user?.role === 'freelancer' && appliedProjectIds.includes(project._id)) {
+                                            if (user?.role === 'freelancer' && appliedProjectIds?.includes(project._id)) {
                                                 return false;
                                             }
                                             return true;

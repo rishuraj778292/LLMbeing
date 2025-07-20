@@ -13,7 +13,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
 app.use(cookieParser())
 app.use(cors({
-    origin: process.env.CORS_ORIGIN
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(url => url.trim()) : ["http://localhost:5173"]
     , credentials: true
 }
 ))
@@ -24,12 +24,22 @@ import authRouter from './routes/auth.route.js';
 import projectRouter from './routes/project.route.js';
 import gigsRouter from './routes/gigs.route.js';
 import profileRouter from './routes/profile.route.js';
+import applicationRouter from './routes/application.route.js';
+import savedProjectRouter from './routes/savedProject.route.js';
+import likeProjectRouter from './routes/likeProject.route.js';
+import dislikeProjectRouter from './routes/dislikeProject.route.js';
+import dashboardRouter from './routes/dashboard.route.js';
 
 // routes decleration
 app.use("/api/v1/user", authRouter);
 app.use("/api/v1/user", profileRouter);
 app.use("/api/v1/project", projectRouter);
 app.use("/api/v1/gig", gigsRouter);
+app.use("/api/v1/applications", applicationRouter);
+app.use("/api/v1/saved-projects", savedProjectRouter);
+app.use("/api/v1/liked-projects", likeProjectRouter);
+app.use("/api/v1/disliked-projects", dislikeProjectRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
 
 // error handling
 app.use(handleError)

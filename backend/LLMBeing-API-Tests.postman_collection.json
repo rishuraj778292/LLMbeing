@@ -1,0 +1,629 @@
+{
+    "info": {
+        "_postman_id": "llmbeing-api-tests",
+        "name": "LLMBeing API Testing Collection",
+        "description": "Comprehensive API testing for Projects and Gigs endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3300/api/v1",
+            "type": "string"
+        },
+        {
+            "key": "accessToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "testProjectId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "testGigId",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "🔐 Authentication",
+            "item": [
+                {
+                    "name": "Register Client",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"fullName\": \"Test Client\",\n  \"email\": \"testclient@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"client\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/user/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Register Freelancer",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"fullName\": \"Test Freelancer\",\n  \"email\": \"testfreelancer@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"freelancer\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/user/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Client",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// Extract access token from cookies",
+                                    "const cookies = pm.cookies.jar();",
+                                    "cookies.get(pm.request.url, 'accessToken', (error, token) => {",
+                                    "  if (token) {",
+                                    "    pm.collectionVariables.set('accessToken', token);",
+                                    "  }",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"testclient@example.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/user/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "user",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📋 Project APIs",
+            "item": [
+                {
+                    "name": "GET All Projects (Public)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/project?page=1&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET Trending Projects (Public)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/project/trending?days=7&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project",
+                                "trending"
+                            ],
+                            "query": [
+                                {
+                                    "key": "days",
+                                    "value": "7"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET Most Liked Projects (Public)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/project/most-liked?limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project",
+                                "most-liked"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST Create Project (Client)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "  const response = pm.response.json();",
+                                    "  pm.collectionVariables.set('testProjectId', response.data._id);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Test Project for API Validation\",\n  \"description\": \"This is a comprehensive test project created to validate the project creation API endpoint functionality.\",\n  \"projectCategory\": \"web_development\",\n  \"skillsRequired\": [\"JavaScript\", \"Node.js\", \"Express\", \"MongoDB\"],\n  \"experienceLevel\": \"intermediate\",\n  \"projectType\": \"one_time\",\n  \"budget\": {\n    \"min\": 1500,\n    \"max\": 3000,\n    \"isNegotiable\": true\n  },\n  \"currency\": \"USD\",\n  \"timeline\": {\n    \"estimatedDuration\": {\n      \"value\": 4,\n      \"unit\": \"weeks\"\n    },\n    \"isFlexible\": true\n  },\n  \"location\": {\n    \"type\": \"remote\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/project",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET Project Details",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/project/{{testProjectId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project",
+                                "{{testProjectId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET Own Projects (Client)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/project/my/projects?status=active",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project",
+                                "my",
+                                "projects"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "active"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "PUT Update Project (Client)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Updated Test Project for API Validation\",\n  \"budget\": {\n    \"min\": 2000,\n    \"max\": 4000,\n    \"isNegotiable\": false\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/project/{{testProjectId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project",
+                                "{{testProjectId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "PUT Update Project Status (Client)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"active\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/project/{{testProjectId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project",
+                                "{{testProjectId}}",
+                                "status"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "DELETE Project (Client)",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{baseUrl}}/project/{{testProjectId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project",
+                                "{{testProjectId}}"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🚀 Gigs APIs",
+            "item": [
+                {
+                    "name": "GET All Gigs (Public)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/gig?page=1&limit=12",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "gig"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "12"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST Create Gig (Freelancer)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "  const response = pm.response.json();",
+                                    "  pm.collectionVariables.set('testGigId', response.data._id);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Professional API Development and Testing Services\",\n  \"description\": \"I will create robust APIs with comprehensive testing suites. This gig includes API design, development, documentation, and thorough testing to ensure your APIs work flawlessly.\",\n  \"category\": \"web_development\",\n  \"skills\": [\"JavaScript\", \"Node.js\", \"Express\", \"API Testing\", \"MongoDB\", \"JWT\"],\n  \"price\": 399,\n  \"deliveryTime\": 10,\n  \"packages\": [\n    {\n      \"name\": \"Basic\",\n      \"description\": \"Simple API with basic endpoints\",\n      \"price\": 399,\n      \"deliveryTime\": 10,\n      \"features\": [\"5 API endpoints\", \"Basic authentication\", \"Documentation\", \"1 revision\"],\n      \"revisions\": 1\n    },\n    {\n      \"name\": \"Standard\",\n      \"description\": \"Advanced API with comprehensive features\",\n      \"price\": 799,\n      \"deliveryTime\": 15,\n      \"features\": [\"15 API endpoints\", \"JWT authentication\", \"Database integration\", \"API documentation\", \"Testing suite\", \"3 revisions\"],\n      \"revisions\": 3\n    },\n    {\n      \"name\": \"Premium\",\n      \"description\": \"Enterprise-level API with full testing\",\n      \"price\": 1499,\n      \"deliveryTime\": 21,\n      \"features\": [\"Unlimited endpoints\", \"Advanced security\", \"Microservices architecture\", \"Comprehensive testing\", \"Documentation\", \"Deployment guide\", \"Unlimited revisions\"],\n      \"revisions\": 999\n    }\n  ],\n  \"tags\": [\"api\", \"backend\", \"testing\", \"nodejs\", \"express\"],\n  \"requirements\": [\"Provide API requirements document\", \"Share database schema if available\", \"Specify authentication needs\"]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/gig",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "gig"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET Gig Details",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/gig/{{testGigId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "gig",
+                                "{{testGigId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET My Gigs (Freelancer)",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/gig/my-gigs?status=active",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "gig",
+                                "my-gigs"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "active"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "PUT Update Gig (Freelancer)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"Premium API Development and Testing Services\",\n  \"price\": 449,\n  \"deliveryTime\": 8\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/gig/{{testGigId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "gig",
+                                "{{testGigId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "PUT Update Gig Status (Freelancer)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"paused\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/gig/{{testGigId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "gig",
+                                "{{testGigId}}",
+                                "status"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "DELETE Gig (Freelancer)",
+                    "request": {
+                        "method": "DELETE",
+                        "url": {
+                            "raw": "{{baseUrl}}/gig/{{testGigId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "gig",
+                                "{{testGigId}}"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🔍 Advanced Filtering Tests",
+            "item": [
+                {
+                    "name": "Projects - Search & Filter",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/project?search=development&categories=web_development&budgetMin=1000&budgetMax=5000&sortBy=newest&page=1&limit=5",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "project"
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "development"
+                                },
+                                {
+                                    "key": "categories",
+                                    "value": "web_development"
+                                },
+                                {
+                                    "key": "budgetMin",
+                                    "value": "1000"
+                                },
+                                {
+                                    "key": "budgetMax",
+                                    "value": "5000"
+                                },
+                                {
+                                    "key": "sortBy",
+                                    "value": "newest"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Gigs - Search & Filter",
+                    "request": {
+                        "method": "GET",
+                        "url": {
+                            "raw": "{{baseUrl}}/gig?search=api&category=web_development&minPrice=200&maxPrice=800&sortBy=rating&sortOrder=desc&page=1&limit=5",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "gig"
+                            ],
+                            "query": [
+                                {
+                                    "key": "search",
+                                    "value": "api"
+                                },
+                                {
+                                    "key": "category",
+                                    "value": "web_development"
+                                },
+                                {
+                                    "key": "minPrice",
+                                    "value": "200"
+                                },
+                                {
+                                    "key": "maxPrice",
+                                    "value": "800"
+                                },
+                                {
+                                    "key": "sortBy",
+                                    "value": "rating"
+                                },
+                                {
+                                    "key": "sortOrder",
+                                    "value": "desc"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
