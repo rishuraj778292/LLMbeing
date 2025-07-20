@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Eye, EyeOff, User, Mail, Lock, ArrowRight, CheckCircle, Building } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock, ArrowRight, CheckCircle, Building, Check, X, Loader2 } from 'lucide-react';
 import { signup } from '../../../Redux/Slice/authSlice';
+import axiosInstance from '../../../UTILS/axiosInstance';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -20,8 +21,17 @@ const Signup = () => {
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState('');
 
+  // Username availability checking states
+  const [usernameAvailability, setUsernameAvailability] = useState({
+    checking: false,
+    available: null,
+    message: '',
+    lastChecked: ''
+  });
+
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const password = watch('password', '');
+  const watchedUsername = watch('userName', '');
 
   useEffect(() => {
     if (user && !loading && !error) {
@@ -42,6 +52,68 @@ const Signup = () => {
   useEffect(() => {
     // Cleanup on unmount - no clearError action available
   }, [dispatch]);
+
+  // Username availability checking function
+  const checkUsernameAvailability = useCallback(async (username) => {
+    if (!username || username.length < 3) {
+      setUsernameAvailability({
+        checking: false,
+        available: null,
+        message: '',
+        lastChecked: ''
+      });
+      return;
+    }
+
+    // Check format first (client-side validation)
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+      setUsernameAvailability({
+        checking: false,
+        available: false,
+        message: 'Username must be 3-20 characters and contain only letters, numbers, and underscores',
+        lastChecked: username
+      });
+      return;
+    }
+
+    setUsernameAvailability(prev => ({
+      ...prev,
+      checking: true,
+      message: 'Checking availability...'
+    }));
+
+    try {
+      const response = await axiosInstance.get(`/api/v1/user/check-username/${username}`);
+      const data = response.data;
+
+      setUsernameAvailability({
+        checking: false,
+        available: data.data.available,
+        message: data.message,
+        lastChecked: username
+      });
+    } catch (error) {
+      console.error('Error checking username availability:', error);
+      setUsernameAvailability({
+        checking: false,
+        available: null,
+        message: 'Unable to check availability. Please try again.',
+        lastChecked: username
+      });
+    }
+  }, []);
+
+  // Debounced username checking effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (watchedUsername && watchedUsername !== usernameAvailability.lastChecked) {
+        checkUsernameAvailability(watchedUsername);
+      }
+    }, 800); // 800ms delay for debouncing
+
+    return () => clearTimeout(timeoutId);
+  }, [watchedUsername, usernameAvailability.lastChecked, checkUsernameAvailability]);
 
   const onSubmit = async (data) => {
     // Prepare final data based on user type
@@ -340,18 +412,58 @@ const Signup = () => {
                         value: 3,
                         message: 'Username must be at least 3 characters'
                       },
+                      maxLength: {
+                        value: 20,
+                        message: 'Username cannot exceed 20 characters'
+                      },
                       pattern: {
                         value: /^[a-zA-Z0-9_]+$/,
                         message: 'Username can only contain letters, numbers, and underscores'
                       }
                     })}
-                    className={`w-full pl-10 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none ${errors.userName ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none ${errors.userName
+                        ? 'border-red-300'
+                        : usernameAvailability.available === true && watchedUsername === usernameAvailability.lastChecked
+                          ? 'border-green-300'
+                          : usernameAvailability.available === false && watchedUsername === usernameAvailability.lastChecked
+                            ? 'border-red-300'
+                            : 'border-gray-300'
                       }`}
                     placeholder="Choose a unique username"
                   />
+
+                  {/* Username availability indicator */}
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    {usernameAvailability.checking && watchedUsername && watchedUsername.length >= 3 && (
+                      <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                    )}
+                    {!usernameAvailability.checking && usernameAvailability.available === true && watchedUsername === usernameAvailability.lastChecked && (
+                      <Check className="h-4 w-4 text-green-500" />
+                    )}
+                    {!usernameAvailability.checking && usernameAvailability.available === false && watchedUsername === usernameAvailability.lastChecked && (
+                      <X className="h-4 w-4 text-red-500" />
+                    )}
+                  </div>
                 </div>
+
+                {/* Username feedback messages */}
                 {errors.userName && (
                   <p className="text-red-500 text-sm mt-1">{errors.userName.message}</p>
+                )}
+                {!errors.userName && usernameAvailability.message && watchedUsername === usernameAvailability.lastChecked && (
+                  <p className={`text-sm mt-1 ${usernameAvailability.available === true
+                      ? 'text-green-600'
+                      : usernameAvailability.available === false
+                        ? 'text-red-600'
+                        : 'text-gray-600'
+                    }`}>
+                    {usernameAvailability.message}
+                  </p>
+                )}
+                {!errors.userName && !usernameAvailability.message && watchedUsername && watchedUsername.length >= 3 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Username must be 3-20 characters, letters, numbers, and underscores only
+                  </p>
                 )}
               </div>
 
