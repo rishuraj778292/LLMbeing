@@ -1,16 +1,11 @@
 
 import Footer from "../components/Footer"
 import Navbar from "../components/Navbar"
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { useSelector } from "react-redux"
 
 const PublicLayout = () => {
-    const { isAuthenticated, status } = useSelector((state) => state.auth)
-
-    // Redirect to dashboard when authenticated
-    if (isAuthenticated) {
-        return <Navigate to="/dashboard" />
-    }
+    const { status } = useSelector((state) => state.auth)
 
     if (status === "loading") return <div>Loading...</div>
     return (

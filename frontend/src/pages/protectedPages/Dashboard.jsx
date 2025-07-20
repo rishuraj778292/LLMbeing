@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import {
@@ -36,58 +36,64 @@ const Dashboard = () => {
         avgRating: 0
     });
 
-    const calculateStats = useCallback(() => {
+    useEffect(() => {
         if (!user) return;
 
-        let stats = {
-            totalEarnings: 0,
-            activeProjects: 0,
-            completedProjects: 0,
-            pendingApplications: 0,
-            successRate: 0,
-            avgRating: 0
-        };
+        // Add a small delay to prevent infinite re-renders
+        const timeoutId = setTimeout(() => {
+            let stats = {
+                totalEarnings: 0,
+                activeProjects: 0,
+                completedProjects: 0,
+                pendingApplications: 0,
+                successRate: 0,
+                avgRating: 0
+            };
 
-        if (user.role === 'client') {
-            // Client statistics
-            const projects = ownProjects || [];
-            stats.activeProjects = projects.filter(p => p.projectStatus === 'active').length;
-            stats.completedProjects = projects.filter(p => p.projectStatus === 'completed').length;
-            stats.pendingApplications = (clientApplications || []).filter(a => a.status === 'pending').length;
+            if (user.role === 'client') {
+                // Client statistics
+                const projects = ownProjects || [];
+                stats.activeProjects = projects.filter(p => p.projectStatus === 'active').length;
+                stats.completedProjects = projects.filter(p => p.projectStatus === 'completed').length;
+                stats.pendingApplications = (clientApplications || []).filter(a => a.status === 'pending').length;
 
-            // Calculate total spent
-            stats.totalEarnings = projects
-                .filter(p => p.projectStatus === 'completed')
-                .reduce((total, project) => {
-                    const budget = project.budget;
-                    if (typeof budget === 'object') {
-                        return total + (budget.max || budget.min || 0);
-                    }
-                    return total + (budget || 0);
+                // Calculate total spent
+                stats.totalEarnings = projects
+                    .filter(p => p.projectStatus === 'completed')
+                    .reduce((total, project) => {
+                        const budget = project.budget;
+                        if (typeof budget === 'object') {
+                            return total + (budget.max || budget.min || 0);
+                        }
+                        return total + (budget || 0);
+                    }, 0);
+            } else if (user.role === 'freelancer') {
+                // Freelancer statistics
+                const applications = userApplications || [];
+                const acceptedApps = applications.filter(a => a.status === 'accepted');
+                const completedApps = applications.filter(a => a.status === 'completed');
+
+                stats.activeProjects = acceptedApps.length;
+                stats.completedProjects = completedApps.length;
+                stats.pendingApplications = applications.filter(a => a.status === 'pending').length;
+
+                // Calculate success rate
+                if (applications.length > 0) {
+                    stats.successRate = Math.round((acceptedApps.length / applications.length) * 100);
+                }
+
+                // Calculate total earnings
+                stats.totalEarnings = completedApps.reduce((total, app) => {
+                    return total + (app.proposedBudget || 0);
                 }, 0);
-        } else if (user.role === 'freelancer') {
-            // Freelancer statistics
-            const applications = userApplications || [];
-            const acceptedApps = applications.filter(a => a.status === 'accepted');
-            const completedApps = applications.filter(a => a.status === 'completed');
-
-            stats.activeProjects = acceptedApps.length;
-            stats.completedProjects = completedApps.length;
-            stats.pendingApplications = applications.filter(a => a.status === 'pending').length;
-
-            // Calculate success rate
-            if (applications.length > 0) {
-                stats.successRate = Math.round((acceptedApps.length / applications.length) * 100);
             }
 
-            // Calculate total earnings
-            stats.totalEarnings = completedApps.reduce((total, app) => {
-                return total + (app.proposedBudget || 0);
-            }, 0);
-        }
+            setDashboardStats(stats);
+        }, 100);
 
-        setDashboardStats(stats);
-    }, [user, ownProjects, userApplications, clientApplications]);
+        return () => clearTimeout(timeoutId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.role, ownProjects?.length, userApplications?.length, clientApplications?.length]);
 
     useEffect(() => {
         if (user) {
@@ -104,11 +110,7 @@ const Dashboard = () => {
         }
     }, [dispatch, user]);
 
-    useEffect(() => {
-        // Calculate dashboard statistics
-        calculateStats();
-    }, [calculateStats]);
-
+    // eslint-disable-next-line no-unused-vars
     const StatCard = ({ icon: Icon, title, value, subtitle, color = 'blue' }) => (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between">
@@ -167,9 +169,9 @@ const Dashboard = () => {
                                 <div key={activity.id} className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
                                         <div className={`w-2 h-2 rounded-full ${activity.status === 'accepted' ? 'bg-green-500' :
-                                                activity.status === 'rejected' ? 'bg-red-500' :
-                                                    activity.status === 'pending' ? 'bg-yellow-500' :
-                                                        'bg-gray-500'
+                                            activity.status === 'rejected' ? 'bg-red-500' :
+                                                activity.status === 'pending' ? 'bg-yellow-500' :
+                                                    'bg-gray-500'
                                             }`} />
                                         <div>
                                             <p className="text-sm font-medium text-gray-900">{activity.title}</p>

@@ -7,10 +7,21 @@ import { useSelector } from 'react-redux';
 
 
 const ProtectedLayout = () => {
-    const { isAuthenticated, loading } = useSelector((state) => state.auth);
+    const { isAuthenticated, verifyStatus } = useSelector((state) => state.auth);
 
-    if (!isAuthenticated) return <Navigate to="/login" />;
-    if (loading) return <div>Loading...</div>;
+    // Show loading while verifying authentication or if verification hasn't started
+    if (verifyStatus === 'loading' || verifyStatus === 'idle') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    // Redirect to login if not authenticated after verification is complete
+    if (verifyStatus === 'failed' || (verifyStatus === 'succeeded' && !isAuthenticated)) {
+        return <Navigate to="/login" />;
+    }
 
     return (
         <div className="min-h-screen bg-slate-50">

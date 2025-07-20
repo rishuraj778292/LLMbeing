@@ -1,8 +1,8 @@
 
 import PublicLayout from "./layout/PublicLayout"
 import Home from "./pages/Home"
-import { Route, Routes, useNavigate } from "react-router-dom"
-import { useEffect } from "react"
+import { Route, Routes, useNavigate, useLocation } from "react-router-dom"
+import { useEffect, useState } from "react"
 
 import Login from "./pages/authentication/Login"
 import Signup from "./pages/authentication/Signup"
@@ -36,18 +36,47 @@ import ProjectApplicationPage from "./pages/ProjectApplicationPage"
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, status, user } = useSelector((state) => state.auth);
+  const location = useLocation();
+  const [hasInitialized, setHasInitialized] = useState(false);
+  const { isAuthenticated, verifyStatus } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(verifyme());
   }, [dispatch]);
 
+  // Mark as initialized after first verification attempt
   useEffect(() => {
-    if (status === 'succeeded' && isAuthenticated) {
-      // Redirect to dashboard for all authenticated users
-      navigate("/dashboard");
+    if (verifyStatus !== 'idle') {
+      setHasInitialized(true);
     }
-  }, [status, isAuthenticated, navigate]);
+  }, [verifyStatus]);
+
+  useEffect(() => {
+    // Only redirect after the app has been initialized and verification is complete
+    if (!hasInitialized) {
+      return;
+    }
+
+    // Only perform redirects after verification is complete (succeeded or failed)
+    if (verifyStatus === 'succeeded' && isAuthenticated) {
+      // Only redirect to dashboard if user is on auth pages or home page
+      const authPages = ['/login', '/signup', '/forgot-password', '/forgotpassword', '/otp-verification', '/reset-password'];
+      const publicPages = ['/', '/contactus', '/about-us', '/privacy-policy', '/term-of-usage'];
+
+      if (authPages.includes(location.pathname) || publicPages.includes(location.pathname)) {
+        navigate("/dashboard");
+      }
+    }
+
+    // If verification failed and user is on protected routes, redirect to login
+    if (verifyStatus === 'failed' && !isAuthenticated) {
+      const protectedRoutes = ['/dashboard', '/projects', '/manage-projects', '/profile', '/messages', '/gigs', '/post-project'];
+      if (protectedRoutes.some(route => location.pathname.startsWith(route))) {
+        navigate("/login");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verifyStatus, isAuthenticated, location.pathname, hasInitialized]);
 
 
 
