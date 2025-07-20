@@ -12,6 +12,7 @@ import {
   Clock,
   Code
 } from 'lucide-react';
+import { getAllCategories, AI_SKILLS } from '../../utils/aiCategories';
 
 const ProjectFilterSidebar = ({ filters, onFilterChange, onClearAll, activeFiltersCount }) => {
   const [expandedSections, setExpandedSections] = useState({
@@ -28,64 +29,21 @@ const ProjectFilterSidebar = ({ filters, onFilterChange, onClearAll, activeFilte
     return <div className="p-4">Loading filters...</div>;
   }
 
-  const projectCategories = [
-    'Web Development',
-    'Mobile Development',
-    'AI & Machine Learning',
-    'Data Science',
-    'UI/UX Design',
-    'Content Writing',
-    'Digital Marketing',
-    'Video Editing',
-    'Graphic Design',
-    'SEO',
-    'Social Media',
-    'Translation',
-    'Blockchain',
-    'DevOps',
-    'Cybersecurity',
-    'Game Development',
-    'E-commerce',
-    'WordPress',
-    'Photography',
-    'Virtual Assistant'
-  ];
-
-  const popularSkills = [
-    'JavaScript',
-    'React',
-    'Node.js',
-    'Python',
-    'PHP',
-    'WordPress',
-    'HTML/CSS',
-    'Vue.js',
-    'Angular',
-    'MongoDB',
-    'MySQL',
-    'Photoshop',
-    'Figma',
-    'AWS',
-    'Docker',
-    'TensorFlow',
-    'Flutter',
-    'React Native',
-    'Laravel',
-    'Django'
-  ];
+  // AI-focused project categories and skills from utility
+  const projectCategories = getAllCategories();
+  const popularSkills = AI_SKILLS;
 
   const experienceLevels = [
-    { value: 'entry', label: 'Entry Level' },
-    { value: 'intermediate', label: 'Intermediate' },
-    { value: 'expert', label: 'Expert' }
+    { value: 'Entry', label: 'Entry Level' },
+    { value: 'Intermediate', label: 'Intermediate' },
+    { value: 'Expert', label: 'Expert' }
   ];
 
   const projectTypes = [
-    { value: 'fixed', label: 'Fixed Price' },
+    { value: 'one_time', label: 'One-time Project' },
     { value: 'hourly', label: 'Hourly Rate' },
-    { value: 'contract', label: 'Contract' },
-    { value: 'full-time', label: 'Full Time' },
-    { value: 'part-time', label: 'Part Time' }
+    { value: 'monthly', label: 'Monthly Contract' },
+    { value: 'ongoing', label: 'Ongoing Work' }
   ];
 
   const budgetRanges = [
@@ -210,10 +168,10 @@ const ProjectFilterSidebar = ({ filters, onFilterChange, onClearAll, activeFilte
           <div className="max-h-48 overflow-y-auto space-y-1">
             {projectCategories.map((category) => (
               <CheckboxOption
-                key={category}
-                value={category}
-                label={category}
-                checked={filters.categories?.includes(category) || false}
+                key={category.value}
+                value={category.value}
+                label={category.label}
+                checked={filters.categories?.includes(category.value) || false}
                 onChange={(value) => handleArrayFilterChange('categories', value)}
               />
             ))}

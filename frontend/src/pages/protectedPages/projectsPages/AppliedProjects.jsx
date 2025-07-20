@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Eye, MessageCircle, FileText, Filter, Search, Calendar, DollarSign, MapPin, Send, X, AlertTriangle } from 'lucide-react';
-import { getUserApplications, withdrawApplication, removeAppliedProjectId } from '../../../../Redux/Slice/applicationSlice';
+import { Clock, Eye, MessageCircle, FileText, Filter, Search, Calendar, DollarSign, MapPin, Send } from 'lucide-react';
+import { getUserApplications } from '../../../../Redux/Slice/applicationSlice';
 
 const AppliedProjects = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [applicationToWithdraw, setApplicationToWithdraw] = useState(null);
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { userApplications, status, error } = useSelector((state) => state.applications);
@@ -18,47 +15,6 @@ const AppliedProjects = () => {
   useEffect(() => {
     dispatch(getUserApplications());
   }, [dispatch]);
-
-  // Handle withdraw application
-  const handleWithdrawClick = (application) => {
-    setApplicationToWithdraw(application);
-    setShowWithdrawModal(true);
-  };
-
-  const handleWithdrawConfirm = async () => {
-    if (!applicationToWithdraw) return;
-
-    setIsWithdrawing(true);
-    try {
-      const projectId = applicationToWithdraw.project._id || applicationToWithdraw.project;
-      console.log('Withdrawing application for project:', projectId);
-
-      // Withdraw the application
-      await dispatch(withdrawApplication(applicationToWithdraw._id)).unwrap();
-      console.log('Application withdrawn successfully');
-
-      // Immediately remove project from applied projects list for instant UI update
-      dispatch(removeAppliedProjectId(projectId));
-      console.log('Removed project from appliedProjectIds:', projectId);
-
-      setShowWithdrawModal(false);
-      setApplicationToWithdraw(null);
-
-      // Refresh applications list to ensure consistency
-      dispatch(getUserApplications());
-      console.log('Refreshed applications list');
-    } catch (error) {
-      console.error('Failed to withdraw application:', error);
-      // You could add toast notification here
-    } finally {
-      setIsWithdrawing(false);
-    }
-  };
-
-  const handleWithdrawCancel = () => {
-    setShowWithdrawModal(false);
-    setApplicationToWithdraw(null);
-  };
 
   // Format location function
   const formatLocation = (location) => {
@@ -159,9 +115,6 @@ const AppliedProjects = () => {
     const project = application.project;
     if (!project) return false;
 
-    // Exclude withdrawn applications from display
-    if (application.status === 'withdrawn') return false;
-
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.client?.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || application.status === statusFilter;
@@ -169,14 +122,11 @@ const AppliedProjects = () => {
   });
 
   const getStatusCounts = () => {
-    // Filter out withdrawn applications for counting
-    const activeApplications = userApplications.filter(app => app.status !== 'withdrawn');
-
     return statusOptions.reduce((acc, option) => {
       if (option.value === 'all') {
-        acc[option.value] = activeApplications.length;
+        acc[option.value] = userApplications.length;
       } else {
-        acc[option.value] = activeApplications.filter(application => application.status === option.value).length;
+        acc[option.value] = userApplications.filter(application => application.status === option.value).length;
       }
       return acc;
     }, {});
@@ -320,24 +270,12 @@ const AppliedProjects = () => {
                     {/* Actions */}
                     <div className="flex flex-row lg:flex-col gap-3 lg:items-end">
                       <button
-                        onClick={() => navigate(`/project/${project.slug || project._id}`)}
+                        onClick={() => navigate(`/projects/${project.slug}`)}
                         className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm cursor-pointer"
                       >
                         <Eye className="w-4 h-4" />
                         <span>View Project</span>
                       </button>
-
-                      {/* Withdraw button - only show for pending applications */}
-                      {application.status === 'pending' && (
-                        <button
-                          onClick={() => handleWithdrawClick(application)}
-                          className="flex items-center space-x-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm cursor-pointer"
-                        >
-                          <X className="w-4 h-4" />
-                          <span>Withdraw</span>
-                        </button>
-                      )}
-
                       {application.status === 'interviewing' && (
                         <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm cursor-pointer">
                           <MessageCircle className="w-4 h-4" />
@@ -392,42 +330,6 @@ const AppliedProjects = () => {
           </div>
         )}
       </div>
-
-      {/* Withdraw Confirmation Modal */}
-      {showWithdrawModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center space-x-3 mb-4">
-              <AlertTriangle className="h-6 w-6 text-red-500" />
-              <h3 className="text-lg font-semibold text-gray-900">
-                Withdraw Application
-              </h3>
-            </div>
-
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to withdraw your application for "{applicationToWithdraw?.project?.title}"?
-              This action cannot be undone.
-            </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleWithdrawCancel}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                disabled={isWithdrawing}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleWithdrawConfirm}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                disabled={isWithdrawing}
-              >
-                {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

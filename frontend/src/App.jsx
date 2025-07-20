@@ -82,7 +82,6 @@ function App() {
             <Route path="current" element={<CurrentProjects />} />
             <Route path="completed" element={<CompletedProjects />} />
           </Route>
-          <Route path="/my-applications" element={<AppliedProjects />} />
           <Route path="/post-project" element={<ProjectPostingForm />} />
           <Route path="/gigs" element={<Gigs />} />
           <Route path="/messages" element={<Messages />} />

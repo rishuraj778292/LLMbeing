@@ -28,6 +28,7 @@ import {
     updateProjectInteraction,
     clearCurrentProject
 } from '../../Redux/Slice/projectSlice';
+import { getCategoryLabel } from '../utils/aiCategories';
 
 const ProjectDetailsPage = () => {
     const { slug } = useParams();
@@ -35,6 +36,7 @@ const ProjectDetailsPage = () => {
     const dispatch = useDispatch();
     const { currentProject, status, error } = useSelector(state => state.projects);
     const { user } = useSelector(state => state.auth);
+    const { appliedProjectIds } = useSelector(state => state.applications);
     const [showFullDescription, setShowFullDescription] = useState(false);
 
     useEffect(() => {
@@ -247,7 +249,8 @@ const ProjectDetailsPage = () => {
     }
 
     const isOwner = user && currentProject.createdBy === user._id;
-    const canApply = user && user.role === 'freelancer' && !isOwner && !currentProject.hasApplied;
+    const hasApplied = currentProject && appliedProjectIds.includes(currentProject._id);
+    const canApply = user && user.role === 'freelancer' && !isOwner && !hasApplied;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -294,8 +297,8 @@ const ProjectDetailsPage = () => {
                                     <button
                                         onClick={handleLike}
                                         className={`p-2 rounded-lg transition-colors ${currentProject.isLiked
-                                                ? 'text-red-500 bg-red-50'
-                                                : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                                            ? 'text-red-500 bg-red-50'
+                                            : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
                                             }`}
                                     >
                                         <Heart className={`h-5 w-5 ${currentProject.isLiked ? 'fill-current' : ''}`} />
@@ -304,8 +307,8 @@ const ProjectDetailsPage = () => {
                                     <button
                                         onClick={handleDislike}
                                         className={`p-2 rounded-lg transition-colors ${currentProject.isDisliked
-                                                ? 'text-orange-500 bg-orange-50'
-                                                : 'text-gray-400 hover:text-orange-500 hover:bg-orange-50'
+                                            ? 'text-orange-500 bg-orange-50'
+                                            : 'text-gray-400 hover:text-orange-500 hover:bg-orange-50'
                                             }`}
                                     >
                                         <ThumbsDown className={`h-5 w-5 ${currentProject.isDisliked ? 'fill-current' : ''}`} />
@@ -314,8 +317,8 @@ const ProjectDetailsPage = () => {
                                     <button
                                         onClick={handleBookmark}
                                         className={`p-2 rounded-lg transition-colors ${currentProject.isBookmarked
-                                                ? 'text-blue-500 bg-blue-50'
-                                                : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50'
+                                            ? 'text-blue-500 bg-blue-50'
+                                            : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50'
                                             }`}
                                     >
                                         <BookmarkPlus className={`h-5 w-5 ${currentProject.isBookmarked ? 'fill-current' : ''}`} />
@@ -405,16 +408,16 @@ const ProjectDetailsPage = () => {
                             )}
 
                             {/* Categories */}
-                            {currentProject.categories && currentProject.categories.length > 0 && (
+                            {currentProject.projectCategory && currentProject.projectCategory.length > 0 && (
                                 <div className="mt-6">
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Categories</h3>
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-4">AI Categories</h3>
                                     <div className="flex flex-wrap gap-2">
-                                        {currentProject.categories.map((category, index) => (
+                                        {currentProject.projectCategory.map((category, index) => (
                                             <span
                                                 key={index}
-                                                className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
+                                                className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium"
                                             >
-                                                {category}
+                                                {getCategoryLabel(category)}
                                             </span>
                                         ))}
                                     </div>
@@ -449,10 +452,18 @@ const ProjectDetailsPage = () => {
                                 </button>
                             )}
 
-                            {currentProject.hasApplied && (
-                                <div className="w-full bg-green-100 text-green-800 font-semibold py-3 px-4 rounded-lg mb-3 flex items-center justify-center">
-                                    <CheckCircle className="h-5 w-5 mr-2" />
-                                    Application Submitted
+                            {hasApplied && (
+                                <div className="space-y-2">
+                                    <div className="w-full bg-green-100 text-green-800 font-semibold py-3 px-4 rounded-lg flex items-center justify-center">
+                                        <CheckCircle className="h-5 w-5 mr-2" />
+                                        Application Submitted
+                                    </div>
+                                    <button
+                                        onClick={() => navigate('/manage-projects/applied')}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                                    >
+                                        View My Application
+                                    </button>
                                 </div>
                             )}
 

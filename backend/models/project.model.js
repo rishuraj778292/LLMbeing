@@ -41,25 +41,25 @@ const projectSchema = new Schema({
     minlength: [10, "Description must be at least 10 characters long"],
     maxlength: [5000, "Description cannot exceed 5000 characters"]
   },
-
+  
   // Enhanced Budget Structure
   budget: {
     min: {
       type: Number,
-      required: function () { return this.projectType === 'one_time'; }
+      required: function() { return this.projectType === 'one_time'; }
     },
     max: {
       type: Number,
-      required: function () { return this.projectType === 'one_time'; }
+      required: function() { return this.projectType === 'one_time'; }
     },
     hourlyRate: {
       min: {
         type: Number,
-        required: function () { return this.projectType === 'hourly'; }
+        required: function() { return this.projectType === 'hourly'; }
       },
       max: {
         type: Number,
-        required: function () { return this.projectType === 'hourly'; }
+        required: function() { return this.projectType === 'hourly'; }
       }
     },
     isNegotiable: {
@@ -67,18 +67,13 @@ const projectSchema = new Schema({
       default: false
     }
   },
-
-  // Accepted budget when project is assigned to freelancer
-  acceptedBudget: {
-    type: Number
-  },
-
+  
   currency: {
     type: String,
     enum: ["USD", "EUR", "INR", "GBP", "CAD", "AUD"],
     default: "USD"
   },
-
+  
   // Project Timeline
   timeline: {
     estimatedDuration: {
@@ -101,49 +96,49 @@ const projectSchema = new Schema({
       default: true
     }
   },
-
+  
   experienceLevel: {
     type: String,
     enum: ['Entry', 'Intermediate', 'Expert'],
     required: [true, "Experience level is required"]
   },
-
+  
   projectType: {
     type: String,
     enum: ['one_time', 'hourly', 'monthly', 'ongoing'],
     required: [true, "Project Type is required"]
   },
-
+  
   projectCategory: {
     type: [String],
     required: [true, "Project category is required"],
     enum: project_categories,
     validate: {
-      validator: function (categories) {
+      validator: function(categories) {
         return categories.length > 0 && categories.length <= 3;
       },
       message: "Please select 1-3 categories"
     }
   },
-
+  
   projectStatus: {
     type: String,
     enum: ["draft", "active", "in_progress", "completed", "cancelled", "paused"],
     default: "draft",
     index: true
   },
-
+  
   skillsRequired: {
     type: [String],
     required: [true, "Skills are required"],
     validate: {
-      validator: function (skills) {
+      validator: function(skills) {
         return skills.length > 0 && skills.length <= 10;
       },
       message: "Please select 1-10 skills"
     }
   },
-
+  
   // Enhanced Project Details
   requirements: {
     description: {
@@ -171,7 +166,7 @@ const projectSchema = new Schema({
       }
     }]
   },
-
+  
   // File Attachments
   attachments: [{
     filename: {
@@ -194,7 +189,7 @@ const projectSchema = new Schema({
       default: Date.now
     }
   }],
-
+  
   // Location & Remote Work
   location: {
     type: {
@@ -212,7 +207,7 @@ const projectSchema = new Schema({
       type: String
     }
   },
-
+  
   // Application Settings
   applicationSettings: {
     maxProposals: {
@@ -237,7 +232,7 @@ const projectSchema = new Schema({
       }
     }]
   },
-
+  
   // Statistics
   stats: {
     viewCount: {
@@ -263,19 +258,15 @@ const projectSchema = new Schema({
     dislikeCount: {
       type: Number,
       default: 0
-    },
-    applicationCount: {
-      type: Number,
-      default: 0
     }
   },
-
+  
   // User Interactions
   interactions: {
     likes: [{
       user: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user',
         required: true
       },
       likedAt: {
@@ -286,7 +277,7 @@ const projectSchema = new Schema({
     dislikes: [{
       user: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user',
         required: true
       },
       dislikedAt: {
@@ -297,7 +288,7 @@ const projectSchema = new Schema({
     bookmarks: [{
       user: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user',
         required: true
       },
       bookmarkedAt: {
@@ -308,7 +299,7 @@ const projectSchema = new Schema({
     reports: [{
       user: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'user',
         required: true
       },
       reason: {
@@ -328,7 +319,7 @@ const projectSchema = new Schema({
       }
     }]
   },
-
+  
   // Legacy fields (for backward compatibility)
   proposal: {
     type: Number,
@@ -342,56 +333,56 @@ const projectSchema = new Schema({
     type: Number,
     default: 0
   },
-
+  
   // Relations
   client: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true,
     index: true
   },
-
+  
   assignedFreelancer: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'user'
   },
-
+  
   // System fields
   isActive: {
     type: Boolean,
     default: true,
     index: true
   },
-
+  
   isFeatured: {
     type: Boolean,
     default: false
   },
-
+  
   isUrgent: {
     type: Boolean,
     default: false
   },
-
+  
   slug: {
     type: String,
     unique: true,
     sparse: true
   },
-
+  
   // SEO & Marketing
   seo: {
     metaTitle: String,
     metaDescription: String,
     keywords: [String]
   },
-
+  
   // Audit Trail
   auditLog: [{
     action: String,
     performedBy: {
       type: Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'user'
     },
     timestamp: {
       type: Date,
@@ -399,12 +390,12 @@ const projectSchema = new Schema({
     },
     details: Schema.Types.Mixed
   }],
-
+  
   // Soft Delete
   deletedAt: Date,
   deletedBy: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'user'
   }
 }, {
   timestamps: true
@@ -428,17 +419,17 @@ projectSchema.index({ 'interactions.dislikes.user': 1 }); // User dislikes looku
 projectSchema.index({ 'interactions.bookmarks.user': 1 }); // User bookmarks lookup
 
 // Compound index for complex queries
-projectSchema.index({
-  projectStatus: 1,
-  isActive: 1,
+projectSchema.index({ 
+  projectStatus: 1, 
+  isActive: 1, 
   deletedAt: 1,
-  createdAt: -1
+  createdAt: -1 
 });
 
 // Text search index with weights
 projectSchema.index(
-  {
-    title: 'text',
+  { 
+    title: 'text', 
     description: 'text',
     skillsRequired: 'text'
   },
@@ -461,32 +452,32 @@ projectSchema.pre('save', function (next) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '') + '-' + Date.now();
   }
-
+  
   // Auto-generate SEO fields
   if (!this.seo.metaTitle && this.title) {
     this.seo.metaTitle = this.title;
   }
-
+  
   if (!this.seo.metaDescription && this.description) {
     this.seo.metaDescription = this.description.substring(0, 160) + '...';
   }
-
+  
   next();
 });
 
 // Pre-find middleware to exclude soft-deleted documents
-projectSchema.pre(/^find/, function (next) {
+projectSchema.pre(/^find/, function(next) {
   this.where({ deletedAt: { $exists: false } });
   next();
 });
 
 // Virtual for project URL
-projectSchema.virtual('url').get(function () {
+projectSchema.virtual('url').get(function() {
   return `/projects/${this.slug}`;
 });
 
 // Virtual for budget display
-projectSchema.virtual('budgetDisplay').get(function () {
+projectSchema.virtual('budgetDisplay').get(function() {
   if (this.projectType === 'hourly' && this.budget.hourlyRate) {
     return `$${this.budget.hourlyRate.min}-${this.budget.hourlyRate.max}/hr`;
   } else if (this.budget.min && this.budget.max) {
@@ -496,7 +487,7 @@ projectSchema.virtual('budgetDisplay').get(function () {
 });
 
 // Instance method for soft delete
-projectSchema.methods.softDelete = function (deletedBy) {
+projectSchema.methods.softDelete = function(deletedBy) {
   this.deletedAt = new Date();
   this.deletedBy = deletedBy;
   this.isActive = false;
@@ -504,7 +495,7 @@ projectSchema.methods.softDelete = function (deletedBy) {
 };
 
 // Instance method to add audit log
-projectSchema.methods.addAuditLog = function (action, performedBy, details = {}) {
+projectSchema.methods.addAuditLog = function(action, performedBy, details = {}) {
   this.auditLog.push({
     action,
     performedBy,
@@ -514,16 +505,16 @@ projectSchema.methods.addAuditLog = function (action, performedBy, details = {})
 };
 
 // Instance methods for like/dislike functionality
-projectSchema.methods.toggleLike = function (userId) {
+projectSchema.methods.toggleLike = function(userId) {
   const userLiked = this.interactions.likes.find(like => like.user.toString() === userId.toString());
   const userDisliked = this.interactions.dislikes.find(dislike => dislike.user.toString() === userId.toString());
-
+  
   // Remove dislike if exists
   if (userDisliked) {
     this.interactions.dislikes.pull({ _id: userDisliked._id });
     this.stats.dislikeCount = Math.max(0, this.stats.dislikeCount - 1);
   }
-
+  
   // Toggle like
   if (userLiked) {
     // Remove like
@@ -538,16 +529,16 @@ projectSchema.methods.toggleLike = function (userId) {
   }
 };
 
-projectSchema.methods.toggleDislike = function (userId) {
+projectSchema.methods.toggleDislike = function(userId) {
   const userLiked = this.interactions.likes.find(like => like.user.toString() === userId.toString());
   const userDisliked = this.interactions.dislikes.find(dislike => dislike.user.toString() === userId.toString());
-
+  
   // Remove like if exists
   if (userLiked) {
     this.interactions.likes.pull({ _id: userLiked._id });
     this.stats.likeCount = Math.max(0, this.stats.likeCount - 1);
   }
-
+  
   // Toggle dislike
   if (userDisliked) {
     // Remove dislike
@@ -562,9 +553,9 @@ projectSchema.methods.toggleDislike = function (userId) {
   }
 };
 
-projectSchema.methods.toggleBookmark = function (userId) {
+projectSchema.methods.toggleBookmark = function(userId) {
   const userBookmarked = this.interactions.bookmarks.find(bookmark => bookmark.user.toString() === userId.toString());
-
+  
   if (userBookmarked) {
     // Remove bookmark
     this.interactions.bookmarks.pull({ _id: userBookmarked._id });
@@ -576,30 +567,30 @@ projectSchema.methods.toggleBookmark = function (userId) {
   }
 };
 
-projectSchema.methods.addReport = function (userId, reason, description = '') {
+projectSchema.methods.addReport = function(userId, reason, description = '') {
   // Check if user already reported this project
-  const existingReport = this.interactions.reports.find(report =>
+  const existingReport = this.interactions.reports.find(report => 
     report.user.toString() === userId.toString() && report.status === 'pending'
   );
-
+  
   if (existingReport) {
     throw new Error('You have already reported this project');
   }
-
+  
   this.interactions.reports.push({
     user: userId,
     reason,
     description
   });
-
+  
   return this.save();
 };
 
-projectSchema.methods.getUserInteraction = function (userId) {
+projectSchema.methods.getUserInteraction = function(userId) {
   const liked = this.interactions.likes.some(like => like.user.toString() === userId.toString());
   const disliked = this.interactions.dislikes.some(dislike => dislike.user.toString() === userId.toString());
   const bookmarked = this.interactions.bookmarks.some(bookmark => bookmark.user.toString() === userId.toString());
-
+  
   return {
     liked,
     disliked,
@@ -610,51 +601,51 @@ projectSchema.methods.getUserInteraction = function (userId) {
 };
 
 // Static method for advanced search
-projectSchema.statics.advancedSearch = function (filters) {
+projectSchema.statics.advancedSearch = function(filters) {
   const query = {};
-
+  
   if (filters.keyword) {
     query.$text = { $search: filters.keyword };
   }
-
+  
   if (filters.categories && filters.categories.length > 0) {
     query.projectCategory = { $in: filters.categories };
   }
-
+  
   if (filters.skills && filters.skills.length > 0) {
     query.skillsRequired = { $in: filters.skills };
   }
-
+  
   if (filters.experienceLevel) {
     query.experienceLevel = filters.experienceLevel;
   }
-
+  
   if (filters.projectType) {
     query.projectType = filters.projectType;
   }
-
+  
   if (filters.budgetMin || filters.budgetMax) {
     query['budget.min'] = {};
     if (filters.budgetMin) query['budget.min'].$gte = filters.budgetMin;
     if (filters.budgetMax) query['budget.max'].$lte = filters.budgetMax;
   }
-
+  
   if (filters.location) {
     query['location.type'] = filters.location;
   }
-
+  
   // Always filter active, non-deleted projects
   query.isActive = true;
   query.projectStatus = { $in: ['active', 'in_progress'] };
-
+  
   return this.find(query);
 };
 
 // Static method to get trending projects
-projectSchema.statics.getTrendingProjects = function (days = 7, limit = 10) {
+projectSchema.statics.getTrendingProjects = function(days = 7, limit = 10) {
   const dateThreshold = new Date();
   dateThreshold.setDate(dateThreshold.getDate() - days);
-
+  
   return this.aggregate([
     {
       $match: {
@@ -686,34 +677,34 @@ projectSchema.statics.getTrendingProjects = function (days = 7, limit = 10) {
 };
 
 // Static method to get most liked projects
-projectSchema.statics.getMostLikedProjects = function (limit = 10) {
+projectSchema.statics.getMostLikedProjects = function(limit = 10) {
   return this.find({
     isActive: true,
     projectStatus: { $in: ['active', 'in_progress'] },
     'stats.likeCount': { $gt: 0 }
   })
-    .sort({ 'stats.likeCount': -1, createdAt: -1 })
-    .limit(limit);
+  .sort({ 'stats.likeCount': -1, createdAt: -1 })
+  .limit(limit);
 };
 
 // Static method to get user's liked projects
-projectSchema.statics.getUserLikedProjects = function (userId, limit = 20) {
+projectSchema.statics.getUserLikedProjects = function(userId, limit = 20) {
   return this.find({
     'interactions.likes.user': userId,
     isActive: true
   })
-    .sort({ 'interactions.likes.likedAt': -1 })
-    .limit(limit);
+  .sort({ 'interactions.likes.likedAt': -1 })
+  .limit(limit);
 };
 
 // Static method to get user's bookmarked projects
-projectSchema.statics.getUserBookmarkedProjects = function (userId, limit = 20) {
+projectSchema.statics.getUserBookmarkedProjects = function(userId, limit = 20) {
   return this.find({
     'interactions.bookmarks.user': userId,
     isActive: true
   })
-    .sort({ 'interactions.bookmarks.bookmarkedAt': -1 })
-    .limit(limit);
+  .sort({ 'interactions.bookmarks.bookmarkedAt': -1 })
+  .limit(limit);
 };
 
 const Project = mongoose.model("Project", projectSchema);

@@ -21,6 +21,7 @@ const ProjectApplicationPage = () => {
     const dispatch = useDispatch();
     const { currentProject, status } = useSelector(state => state.projects);
     const { user } = useSelector(state => state.auth);
+    const { appliedProjectIds } = useSelector(state => state.applications);
 
     // Format budget function
     const formatBudget = (budget) => {
@@ -87,7 +88,13 @@ const ProjectApplicationPage = () => {
             navigate(`/project/${slug}`);
             return;
         }
-    }, [user, navigate, slug]);
+
+        // Redirect if user has already applied to prevent navigation loops
+        if (currentProject && appliedProjectIds.includes(currentProject._id)) {
+            navigate(`/project/${slug}`, { replace: true });
+            return;
+        }
+    }, [user, navigate, slug, currentProject, appliedProjectIds]);
 
     const validateForm = () => {
         const newErrors = {};
@@ -199,7 +206,10 @@ const ProjectApplicationPage = () => {
         );
     }
 
-    if (currentProject.hasApplied) {
+    // Check if user has already applied using Redux state
+    const hasApplied = currentProject && appliedProjectIds.includes(currentProject._id);
+
+    if (hasApplied) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">

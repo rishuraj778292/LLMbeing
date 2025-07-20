@@ -22,6 +22,7 @@ import {
     updateFilters
 } from '../../Redux/Slice/projectSlice';
 import { getUserApplications } from '../../Redux/Slice/applicationSlice';
+import { getCategoryLabel } from '../utils/aiCategories';
 
 const FindProjectsPage = () => {
     const dispatch = useDispatch();
@@ -307,7 +308,7 @@ const FindProjectsPage = () => {
                                     )}
                                     {filters.categories.map(category => (
                                         <span key={category} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-50 text-blue-700 border border-blue-200">
-                                            {category}
+                                            {getCategoryLabel(category)}
                                         </span>
                                     ))}
                                     {filters.skills.map(skill => (

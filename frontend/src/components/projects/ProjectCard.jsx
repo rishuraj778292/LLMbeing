@@ -80,6 +80,7 @@ import {
   toggleBookmark,
   updateProjectInteraction
 } from '../../../Redux/Slice/projectSlice';
+import { getCategoryLabel } from '../../utils/aiCategories';
 
 const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
   const navigate = useNavigate();
@@ -311,6 +312,25 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
               {project.description || "No description provided"}
             </p>
 
+            {/* Categories */}
+            {project.projectCategory && project.projectCategory.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {project.projectCategory.slice(0, 2).map((category, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium"
+                  >
+                    <Tag className="h-3 w-3 mr-1 inline" />
+                    {getCategoryLabel(category)}
+                  </span>
+                ))}
+                {project.projectCategory.length > 2 && (
+                  <span className="text-xs text-gray-500 py-1">+{project.projectCategory.length - 2} more</span>
+                )}
+              </div>
+            )}
+
+            {/* Skills */}
             <div className="flex flex-wrap gap-2">
               {project.skillsRequired && project.skillsRequired.slice(0, 5).map((skill, index) => (
                 <span
@@ -331,8 +351,8 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
             <button
               onClick={handleLike}
               className={`flex items-center gap-2 transition-colors p-2 rounded-lg ${project.isLiked
-                  ? 'text-red-500 bg-red-50'
-                  : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
+                ? 'text-red-500 bg-red-50'
+                : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
                 }`}
             >
               <Heart className={`w-4 h-4 ${project.isLiked ? 'fill-current' : ''}`} />
@@ -342,8 +362,8 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
             <button
               onClick={handleDislike}
               className={`flex items-center gap-2 transition-colors p-2 rounded-lg ${project.isDisliked
-                  ? 'text-orange-500 bg-orange-50'
-                  : 'text-gray-500 hover:text-orange-500 hover:bg-orange-50'
+                ? 'text-orange-500 bg-orange-50'
+                : 'text-gray-500 hover:text-orange-500 hover:bg-orange-50'
                 }`}
             >
               <ThumbsDown className={`w-4 h-4 ${project.isDisliked ? 'fill-current' : ''}`} />
@@ -353,8 +373,8 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
             <button
               onClick={handleBookmark}
               className={`flex items-center gap-2 transition-colors p-2 rounded-lg ${project.isBookmarked
-                  ? 'text-blue-500 bg-blue-50'
-                  : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'
+                ? 'text-blue-500 bg-blue-50'
+                : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'
                 }`}
             >
               <BookmarkPlus className={`w-4 h-4 ${project.isBookmarked ? 'fill-current' : ''}`} />
@@ -409,8 +429,8 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
             <button
               onClick={handleLike}
               className={`transition-colors p-1 ${project.isLiked
-                  ? 'text-red-500'
-                  : 'text-gray-400 hover:text-red-500'
+                ? 'text-red-500'
+                : 'text-gray-400 hover:text-red-500'
                 }`}
             >
               <Heart className={`w-4 h-4 ${project.isLiked ? 'fill-current' : ''}`} />
@@ -419,8 +439,8 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
             <button
               onClick={handleDislike}
               className={`transition-colors p-1 ${project.isDisliked
-                  ? 'text-orange-500'
-                  : 'text-gray-400 hover:text-orange-500'
+                ? 'text-orange-500'
+                : 'text-gray-400 hover:text-orange-500'
                 }`}
             >
               <ThumbsDown className={`w-4 h-4 ${project.isDisliked ? 'fill-current' : ''}`} />
@@ -429,8 +449,8 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
             <button
               onClick={handleBookmark}
               className={`transition-colors p-1 ${project.isBookmarked
-                  ? 'text-blue-500'
-                  : 'text-gray-400 hover:text-blue-500'
+                ? 'text-blue-500'
+                : 'text-gray-400 hover:text-blue-500'
                 }`}
             >
               <BookmarkPlus className={`w-4 h-4 ${project.isBookmarked ? 'fill-current' : ''}`} />
@@ -462,6 +482,24 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
           <div className="mb-4">
             <div className="text-sm font-medium text-gray-700 mb-1">Proposal Requirements:</div>
             <p className="text-sm text-gray-600 line-clamp-2">{project.proposal}</p>
+          </div>
+        )}
+
+        {/* Categories section */}
+        {project.projectCategory && project.projectCategory.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {project.projectCategory.slice(0, 2).map((category, index) => (
+              <span
+                key={index}
+                className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium"
+              >
+                <Tag className="h-3 w-3 mr-1 inline" />
+                {getCategoryLabel(category)}
+              </span>
+            ))}
+            {project.projectCategory.length > 2 && (
+              <span className="text-xs text-gray-500 py-1">+{project.projectCategory.length - 2} more</span>
+            )}
           </div>
         )}
 

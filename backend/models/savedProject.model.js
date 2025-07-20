@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
-const { Schema } = mongoose;
+const { schema } = mongoose();
 import Project from "./project.model.js"
 import User from "./user.model.js";
 
-const savedProjectSchema = new Schema({
+const savedProjectSchema = new schema({
     user: {
         type: Schema.Types.ObjectId,
         ref: 'User'
-
+        
     },
     project: {
         type: Schema.Types.ObjectId,
