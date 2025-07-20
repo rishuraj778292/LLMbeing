@@ -15,6 +15,7 @@ import ProtectedLayout from "./layout/ProtectedLayout"
 import Messages from "./pages/protectedPages/Messages"
 import Gigs from "./pages/protectedPages/Gigs"
 import Profile from "./pages/protectedPages/Profile/Profile"
+import Dashboard from "./pages/protectedPages/Dashboard"
 import { useSelector, useDispatch } from "react-redux"
 import { verifyme } from "../Redux/Slice/authSlice"
 import Accountsetting from "./pages/protectedPages/Accountsetting"
@@ -43,16 +44,10 @@ function App() {
 
   useEffect(() => {
     if (status === 'succeeded' && isAuthenticated) {
-      // Redirect based on user role
-      if (user?.role === 'client') {
-        navigate("/post-project");
-      } else if (user?.role === 'freelancer') {
-        navigate("/projects");
-      } else {
-        navigate("/projects");
-      }
+      // Redirect to dashboard for all authenticated users
+      navigate("/dashboard");
     }
-  }, [status, isAuthenticated, user?.role, navigate]);
+  }, [status, isAuthenticated, navigate]);
 
 
 
@@ -73,6 +68,7 @@ function App() {
         </Route>
 
         <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/account-setting" element={<Accountsetting />} />
           <Route path="/projects" element={<FindProjectsPage />} />
           <Route path="/project/:slug" element={<ProjectDetailsPage />} />

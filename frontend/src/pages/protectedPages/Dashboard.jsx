@@ -17,15 +17,16 @@ import {
     Plus,
     Eye
 } from 'lucide-react';
-import { fetchUserProjects } from '../../../Redux/Slice/projectSlice';
+import { fetchOwnProjects } from '../../../Redux/Slice/projectSlice';
 import { getUserApplications, getClientApplications } from '../../../Redux/Slice/applicationSlice';
 
 const Dashboard = () => {
     const dispatch = useDispatch();
     const { user } = useSelector(state => state.auth);
-    const { userProjects } = useSelector(state => state.projects);
-    const { userApplications, clientApplications } = useSelector(state => state.applications);
-    
+    const { ownProjects } = useSelector(state => state.projects);
+    const applicationState = useSelector(state => state.application);
+    const { userApplications = [], clientApplications = [] } = applicationState || {};
+
     const [dashboardStats, setDashboardStats] = useState({
         totalEarnings: 0,
         activeProjects: 0,
@@ -49,11 +50,11 @@ const Dashboard = () => {
 
         if (user.role === 'client') {
             // Client statistics
-            const projects = userProjects || [];
+            const projects = ownProjects || [];
             stats.activeProjects = projects.filter(p => p.projectStatus === 'active').length;
             stats.completedProjects = projects.filter(p => p.projectStatus === 'completed').length;
             stats.pendingApplications = (clientApplications || []).filter(a => a.status === 'pending').length;
-            
+
             // Calculate total spent
             stats.totalEarnings = projects
                 .filter(p => p.projectStatus === 'completed')
@@ -69,16 +70,16 @@ const Dashboard = () => {
             const applications = userApplications || [];
             const acceptedApps = applications.filter(a => a.status === 'accepted');
             const completedApps = applications.filter(a => a.status === 'completed');
-            
+
             stats.activeProjects = acceptedApps.length;
             stats.completedProjects = completedApps.length;
             stats.pendingApplications = applications.filter(a => a.status === 'pending').length;
-            
+
             // Calculate success rate
             if (applications.length > 0) {
                 stats.successRate = Math.round((acceptedApps.length / applications.length) * 100);
             }
-            
+
             // Calculate total earnings
             stats.totalEarnings = completedApps.reduce((total, app) => {
                 return total + (app.proposedBudget || 0);
@@ -86,16 +87,16 @@ const Dashboard = () => {
         }
 
         setDashboardStats(stats);
-    }, [user, userProjects, userApplications, clientApplications]);
+    }, [user, ownProjects, userApplications, clientApplications]);
 
     useEffect(() => {
         if (user) {
             // Fetch user's projects if they're a client
             if (user.role === 'client') {
-                dispatch(fetchUserProjects());
+                dispatch(fetchOwnProjects());
                 dispatch(getClientApplications());
             }
-            
+
             // Fetch user's applications if they're a freelancer
             if (user.role === 'freelancer') {
                 dispatch(getUserApplications());
@@ -127,7 +128,7 @@ const Dashboard = () => {
 
     const RecentActivity = () => {
         const activities = [];
-        
+
         if (user?.role === 'client' && clientApplications) {
             clientApplications.slice(0, 5).forEach(app => {
                 activities.push({
@@ -165,12 +166,11 @@ const Dashboard = () => {
                             {activities.map((activity) => (
                                 <div key={activity.id} className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
-                                        <div className={`w-2 h-2 rounded-full ${
-                                            activity.status === 'accepted' ? 'bg-green-500' :
-                                            activity.status === 'rejected' ? 'bg-red-500' :
-                                            activity.status === 'pending' ? 'bg-yellow-500' :
-                                            'bg-gray-500'
-                                        }`} />
+                                        <div className={`w-2 h-2 rounded-full ${activity.status === 'accepted' ? 'bg-green-500' :
+                                                activity.status === 'rejected' ? 'bg-red-500' :
+                                                    activity.status === 'pending' ? 'bg-yellow-500' :
+                                                        'bg-gray-500'
+                                            }`} />
                                         <div>
                                             <p className="text-sm font-medium text-gray-900">{activity.title}</p>
                                             <p className="text-xs text-gray-500">{activity.subtitle}</p>
@@ -208,7 +208,7 @@ const Dashboard = () => {
                     {user?.role === 'client' ? (
                         <>
                             <Link
-                                to="/protected/project/post"
+                                to="/post-project"
                                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                                 <div className="flex items-center space-x-3">
@@ -218,7 +218,7 @@ const Dashboard = () => {
                                 <ArrowRight className="h-4 w-4 text-gray-400" />
                             </Link>
                             <Link
-                                to="/protected/projects"
+                                to="/manage-projects"
                                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                                 <div className="flex items-center space-x-3">
@@ -231,7 +231,7 @@ const Dashboard = () => {
                     ) : (
                         <>
                             <Link
-                                to="/find-projects"
+                                to="/projects"
                                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                                 <div className="flex items-center space-x-3">
@@ -241,7 +241,7 @@ const Dashboard = () => {
                                 <ArrowRight className="h-4 w-4 text-gray-400" />
                             </Link>
                             <Link
-                                to="/protected/applications"
+                                to="/manage-projects"
                                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                                 <div className="flex items-center space-x-3">
@@ -253,7 +253,7 @@ const Dashboard = () => {
                         </>
                     )}
                     <Link
-                        to="/protected/profile"
+                        to="/profile"
                         className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                         <div className="flex items-center space-x-3">
@@ -284,8 +284,8 @@ const Dashboard = () => {
                         Welcome back, {user.fullName}
                     </h1>
                     <p className="text-gray-600 mt-2">
-                        {user.role === 'client' 
-                            ? 'Manage your projects and find talented freelancers' 
+                        {user.role === 'client'
+                            ? 'Manage your projects and find talented freelancers'
                             : 'Find amazing projects and grow your freelance career'
                         }
                     </p>

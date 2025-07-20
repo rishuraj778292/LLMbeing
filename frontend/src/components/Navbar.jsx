@@ -59,12 +59,14 @@ const Navbar = ({ isAuthPage }) => {
 
         if (user?.role === 'freelancer') {
             return [
+                { path: '/dashboard', label: 'Dashboard', icon: <FileText className="w-4 h-4" /> },
                 { path: '/projects', label: 'Find Projects', icon: <Search className="w-4 h-4" /> },
                 { path: '/manage-projects', label: 'Manage Projects', icon: <Briefcase className="w-4 h-4" /> },
                 { path: '/messages', label: 'Messages', icon: <MessageCircle className="w-4 h-4" /> }
             ];
         } else if (user?.role === 'client') {
             return [
+                { path: '/dashboard', label: 'Dashboard', icon: <FileText className="w-4 h-4" /> },
                 { path: '/post-project', label: 'Post Project', icon: <PlusCircle className="w-4 h-4" /> },
                 { path: '/manage-projects', label: 'Manage Projects', icon: <Briefcase className="w-4 h-4" /> },
                 { path: '/messages', label: 'Messages', icon: <MessageCircle className="w-4 h-4" /> }

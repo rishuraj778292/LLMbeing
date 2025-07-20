@@ -4,17 +4,11 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 
 const AuthLayout = () => {
-   const { isAuthenticated, user } = useSelector((state) => state.auth)
+   const { isAuthenticated } = useSelector((state) => state.auth)
 
-   // Redirect based on user role when authenticated
+   // Redirect to dashboard when authenticated
    if (isAuthenticated) {
-      if (user?.role === 'client') {
-         return <Navigate to="/post-project" />
-      } else if (user?.role === 'freelancer') {
-         return <Navigate to="/projects" />
-      } else {
-         return <Navigate to="/projects" />
-      }
+      return <Navigate to="/dashboard" />
    }
 
    const isAuthPage = true;

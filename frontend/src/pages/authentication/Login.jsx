@@ -213,14 +213,8 @@ const Login = () => {
   useEffect(() => {
     if (isAuthenticated) {
       console.log("Updated user:", user);
-      // Redirect based on user role
-      if (user?.role === 'client') {
-        navigate('/post-project');
-      } else if (user?.role === 'freelancer') {
-        navigate('/projects');
-      } else {
-        navigate('/projects');
-      }
+      // Redirect to dashboard for all authenticated users
+      navigate('/dashboard');
     }
 
     if (loginStatus === "failed") {
@@ -251,7 +245,12 @@ const Login = () => {
       <div className="h-full w-full flex flex-col md:flex-row bg-gray-50 font-sans border rounded-2xl mt-4 md:mt-0 mb-8">
         {/* Left side - Image and intro text */}
         <div className="md:w-5/12 bg-gradient-to-br from-blue-600 to-purple-700 text-white flex flex-col justify-center p-8 md:p-12 pt-8 md:pt-20 md:rounded-l-2xl">
-          <div className="max-w-md mx-auto">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-md mx-auto"
+          >
             <h1 className="text-4xl md:text-5xl font-bold mb-6">Welcome back to LLMbeing</h1>
             <p className="text-lg mb-8 text-blue-100">Connect with your freelance community and manage your projects.</p>
 
@@ -284,14 +283,19 @@ const Login = () => {
 
             <div className="text-sm text-blue-200">
               Don't have an account?{" "}
-              <a href="/signup" className="text-white font-medium hover:text-blue-100">Sign up</a>
+              <a href="/signup" className="text-white font-medium hover:text-blue-100 cursor-pointer">Sign up</a>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Right side - Login form */}
         <div className="md:w-7/12 bg-white p-8 md:p-12 flex items-center md:rounded-r-2xl">
-          <div className="w-full max-w-md mx-auto">
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="w-full max-w-md mx-auto"
+          >
             <div className="text-center md:text-left mb-8">
               <h2 className="text-2xl font-bold text-gray-800">Log in to your account</h2>
               <p className="text-gray-600 mt-1">Welcome back! Please enter your details</p>
@@ -316,7 +320,15 @@ const Login = () => {
                   />
                 </div>
                 {errors.emailOrUserName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.emailOrUserName.message}</p>
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-red-500 text-sm mt-1"
+                  >
+                    {errors.emailOrUserName.message}
+                  </motion.p>
                 )}
               </div>
 
@@ -338,7 +350,15 @@ const Login = () => {
                   />
                 </div>
                 {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-red-500 text-sm mt-1"
+                  >
+                    {errors.password.message}
+                  </motion.p>
                 )}
               </div>
 
@@ -348,16 +368,16 @@ const Login = () => {
                   <input
                     id="remember"
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                     {...register("remember")}
                   />
-                  <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
+                  <label htmlFor="remember" className="ml-2 block text-sm text-gray-700 cursor-pointer">
                     Remember me
                   </label>
                 </div>
 
                 <div className="text-sm">
-                  <a href="/forgotpassword" className="font-medium text-blue-600 hover:text-blue-500">
+                  <a href="/forgotpassword" className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
                     Forgot password?
                   </a>
                 </div>
@@ -365,9 +385,11 @@ const Login = () => {
 
               {/* Login button */}
               <div>
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
                 >
                   {loginStatus === "loading" ? (
                     <span className="flex items-center justify-center">
@@ -380,7 +402,7 @@ const Login = () => {
                   ) : (
                     "Log in"
                   )}
-                </button>
+                </motion.button>
               </div>
             </form>
 
@@ -397,9 +419,11 @@ const Login = () => {
             {/* Social login buttons */}
             <div>
               {/* Google Button */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="button"
-                className="w-full py-2.5 px-4 border rounded-lg text-gray-700 hover:bg-gray-50 flex justify-center items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                className="w-full py-2.5 px-4 border rounded-lg text-gray-700 hover:bg-gray-50 flex justify-center items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 cursor-pointer"
               >
                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                   <path
@@ -420,11 +444,11 @@ const Login = () => {
                   />
                 </svg>
                 Google
-              </button>
+              </motion.button>
 
 
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

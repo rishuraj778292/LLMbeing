@@ -222,7 +222,7 @@ const applicationSlice = createSlice({
                 state.success = 'Application withdrawn successfully!';
                 const withdrawnApp = state.userApplications.find(app => app._id === action.payload.applicationId);
                 state.userApplications = state.userApplications.filter(app => app._id !== action.payload.applicationId);
-                
+
                 // Remove from applied project IDs
                 if (withdrawnApp) {
                     const projectId = withdrawnApp.project?._id || withdrawnApp.project;
@@ -230,7 +230,7 @@ const applicationSlice = createSlice({
                         state.appliedProjectIds = state.appliedProjectIds.filter(id => id !== projectId);
                     }
                 }
-                
+
                 if (state.selectedApplication?._id === action.payload.applicationId) {
                     state.selectedApplication = null;
                 }
@@ -247,8 +247,11 @@ const applicationSlice = createSlice({
             })
             .addCase(getUserApplications.fulfilled, (state, action) => {
                 state.loading = false;
-                state.userApplications = action.payload.data;
-                state.appliedProjectIds = action.payload.data.map(app => app.project?._id || app.project).filter(Boolean);
+                const data = action.payload.data || action.payload || [];
+                state.userApplications = Array.isArray(data) ? data : [];
+                state.appliedProjectIds = Array.isArray(data)
+                    ? data.map(app => app.project?._id || app.project).filter(Boolean)
+                    : [];
                 state.pagination = action.payload.pagination || state.pagination;
             })
             .addCase(getUserApplications.rejected, (state, action) => {
@@ -326,7 +329,8 @@ const applicationSlice = createSlice({
             })
             .addCase(getProjectApplications.fulfilled, (state, action) => {
                 state.loading = false;
-                state.projectApplications = action.payload.data;
+                const data = action.payload.data || action.payload || [];
+                state.projectApplications = Array.isArray(data) ? data : [];
                 state.pagination = action.payload.pagination || state.pagination;
             })
             .addCase(getProjectApplications.rejected, (state, action) => {
@@ -341,7 +345,8 @@ const applicationSlice = createSlice({
             })
             .addCase(getClientApplications.fulfilled, (state, action) => {
                 state.loading = false;
-                state.clientApplications = action.payload.data;
+                const data = action.payload.data || action.payload || [];
+                state.clientApplications = Array.isArray(data) ? data : [];
                 state.pagination = action.payload.pagination || state.pagination;
             })
             .addCase(getClientApplications.rejected, (state, action) => {
