@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Eye, EyeOff, User, Mail, Lock, ArrowRight, CheckCircle, Building, Check, X, Loader2 } from 'lucide-react';
-import { signup } from '../../../Redux/Slice/authSlice';
 import axiosInstance from '../../../UTILS/axiosInstance';
 
 const Signup = () => {
@@ -16,10 +15,11 @@ const Signup = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState('freelancer');
-  const [showSuccess, setShowSuccess] = useState(false);
   const [accountType, setAccountType] = useState('individual');
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState('');
+  const [registrationLoading, setRegistrationLoading] = useState(false);
+  const [registrationError, setRegistrationError] = useState('');
 
   // Username availability checking states
   const [usernameAvailability, setUsernameAvailability] = useState({
@@ -29,24 +29,14 @@ const Signup = () => {
     lastChecked: ''
   });
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm();
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
   const password = watch('password', '');
+  const confirmPassword = watch('confirmPassword', '');
   const watchedUsername = watch('userName', '');
 
   useEffect(() => {
-    if (user && !loading && !error) {
-      setShowSuccess(true);
-      setTimeout(() => {
-        // Redirect based on user role
-        if (user?.role === 'client') {
-          navigate('/post-project');
-        } else if (user?.role === 'freelancer') {
-          navigate('/projects');
-        } else {
-          navigate('/projects');
-        }
-      }, 2000);
-    }
+    // Remove automatic success and redirect logic since we now use OTP verification
+    // The success will be handled in OTPVerification component after email verification
   }, [user, loading, error, navigate]);
 
   useEffect(() => {
@@ -116,25 +106,48 @@ const Signup = () => {
   }, [watchedUsername, usernameAvailability.lastChecked, checkUsernameAvailability]);
 
   const onSubmit = async (data) => {
-    // Prepare final data based on user type
-    const finalData = {
-      ...data,
-      role: userType,
-      fullName: `${data.firstName} ${data.lastName}` // Combine first and last name
-    };
+    setRegistrationLoading(true);
+    setRegistrationError('');
 
-    // Add user type specific fields
-    if (userType === 'freelancer') {
-      finalData.skills = skills;
-    } else if (userType === 'client') {
-      finalData.accountType = accountType;
-      if (accountType === 'company') {
-        finalData.companyName = data.companyName;
-        finalData.companyCategory = data.companyCategory;
+    try {
+      // Prepare final data based on user type
+      const finalData = {
+        ...data,
+        role: userType,
+        fullName: `${data.firstName} ${data.lastName}` // Combine first and last name
+      };
+
+      // Add user type specific fields
+      if (userType === 'freelancer') {
+        finalData.skills = skills;
+      } else if (userType === 'client') {
+        finalData.accountType = accountType;
+        if (accountType === 'company') {
+          finalData.companyName = data.companyName;
+          finalData.companyCategory = data.companyCategory;
+        }
       }
-    }
 
-    dispatch(signup(finalData));
+      // Call registration API directly
+      const response = await axiosInstance.post('/api/v1/user/register', finalData);
+
+      if (response.data.success) {
+        // Redirect to OTP verification page
+        navigate('/otp-verification', {
+          state: {
+            email: data.email,
+            type: 'registration'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setRegistrationError(
+        error.response?.data?.message || 'Registration failed. Please try again.'
+      );
+    } finally {
+      setRegistrationLoading(false);
+    }
   };
 
   const getPasswordStrength = (password) => {
@@ -178,36 +191,17 @@ const Signup = () => {
     }
   };
 
-  if (showSuccess) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md w-full mx-4"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          </motion.div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to LLMbeing!</h2>
-          <p className="text-gray-600 mb-4">Your account has been created successfully.</p>
-          <div className="w-full bg-blue-600 h-1 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-blue-400"
-              initial={{ width: 0 }}
-              animate={{ width: '100%' }}
-              transition={{ duration: 2 }}
-            />
-          </div>
-          <p className="text-sm text-gray-500 mt-2">Redirecting to your workspace...</p>
-        </motion.div>
-      </div>
-    );
-  }
+  // Function to clear username field
+  const clearUsername = () => {
+    // Use setValue from useForm to clear the username field
+    setValue('userName', '');
+    setUsernameAvailability({
+      checking: false,
+      available: null,
+      message: '',
+      lastChecked: ''
+    });
+  };
 
   return (
     <div className="min-h-screen min-w-screen md:px-10 md:flex md:items-center md:justify-center pt-20 md:pt-10">
@@ -235,7 +229,7 @@ const Signup = () => {
                 <div className="bg-blue-100 rounded-full p-2">
                   <CheckCircle className="w-6 h-6 text-blue-700" />
                 </div>
-                <span className="text-blue-100">Secure payment system</span>
+                <span className="text-blue-100">Zero platform charges</span>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="bg-blue-100 rounded-full p-2">
@@ -248,7 +242,7 @@ const Signup = () => {
               Already have an account?{' '}
               <Link
                 to="/login"
-                className="text-white font-medium hover:text-blue-100 transition-colors"
+                className="text-white font-medium hover:text-blue-100 transition-colors cursor-pointer"
               >
                 Sign in here
               </Link>
@@ -269,13 +263,13 @@ const Signup = () => {
               <p className="text-gray-600 mt-1">Join thousands of satisfied users</p>
             </div>
 
-            {error && (
+            {(error || registrationError) && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6"
               >
-                {error}
+                {error || registrationError}
               </motion.div>
             )}
 
@@ -288,7 +282,7 @@ const Signup = () => {
                   whileTap={{ scale: 0.98 }}
                   type="button"
                   onClick={() => setUserType('freelancer')}
-                  className={`p-4 rounded-lg border-2 text-center transition-all ${userType === 'freelancer'
+                  className={`p-4 rounded-lg border-2 text-center transition-all cursor-pointer ${userType === 'freelancer'
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                     }`}
@@ -302,7 +296,7 @@ const Signup = () => {
                   whileTap={{ scale: 0.98 }}
                   type="button"
                   onClick={() => setUserType('client')}
-                  className={`p-4 rounded-lg border-2 text-center transition-all ${userType === 'client'
+                  className={`p-4 rounded-lg border-2 text-center transition-all cursor-pointer ${userType === 'client'
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                     }`}
@@ -370,7 +364,7 @@ const Signup = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -391,6 +385,39 @@ const Signup = () => {
                 )}
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="confirmPassword"
+                    {...register('confirmPassword', {
+                      required: 'Please confirm your password',
+                      validate: value =>
+                        value === password || 'Passwords do not match'
+                    })}
+                    className={`w-full pl-10 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                      }`}
+                    placeholder="Confirm your password"
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
+                )}
+                {confirmPassword && confirmPassword === password && !errors.confirmPassword && (
+                  <p className="text-green-600 text-sm mt-1 flex items-center">
+                    <Check className="w-4 h-4 mr-1" />
+                    Passwords match
+                  </p>
                 )}
               </div>
 
@@ -421,13 +448,13 @@ const Signup = () => {
                         message: 'Username can only contain letters, numbers, and underscores'
                       }
                     })}
-                    className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none ${errors.userName
-                        ? 'border-red-300'
-                        : usernameAvailability.available === true && watchedUsername === usernameAvailability.lastChecked
-                          ? 'border-green-300'
-                          : usernameAvailability.available === false && watchedUsername === usernameAvailability.lastChecked
-                            ? 'border-red-300'
-                            : 'border-gray-300'
+                    className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all duration-300 ${errors.userName
+                      ? 'border-red-300'
+                      : usernameAvailability.available === true && watchedUsername === usernameAvailability.lastChecked
+                        ? 'border-green-300 shadow-sm'
+                        : usernameAvailability.available === false && watchedUsername === usernameAvailability.lastChecked
+                          ? 'border-red-300'
+                          : 'border-gray-300'
                       }`}
                     placeholder="Choose a unique username"
                   />
@@ -435,35 +462,80 @@ const Signup = () => {
                   {/* Username availability indicator */}
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     {usernameAvailability.checking && watchedUsername && watchedUsername.length >= 3 && (
-                      <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                      </motion.div>
                     )}
                     {!usernameAvailability.checking && usernameAvailability.available === true && watchedUsername === usernameAvailability.lastChecked && (
-                      <Check className="h-4 w-4 text-green-500" />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+                      >
+                        <Check className="h-4 w-4 text-green-500" />
+                      </motion.div>
                     )}
                     {!usernameAvailability.checking && usernameAvailability.available === false && watchedUsername === usernameAvailability.lastChecked && (
-                      <X className="h-4 w-4 text-red-500" />
+                      <motion.button
+                        type="button"
+                        onClick={clearUsername}
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
+                        className="cursor-pointer hover:bg-red-100 rounded-full p-1 transition-colors"
+                        title="Clear username"
+                      >
+                        <X className="h-4 w-4 text-red-500" />
+                      </motion.button>
                     )}
                   </div>
                 </div>
 
                 {/* Username feedback messages */}
                 {errors.userName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.userName.message}</p>
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-red-500 text-sm mt-1"
+                  >
+                    {errors.userName.message}
+                  </motion.p>
                 )}
                 {!errors.userName && usernameAvailability.message && watchedUsername === usernameAvailability.lastChecked && (
-                  <p className={`text-sm mt-1 ${usernameAvailability.available === true
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className={`text-sm mt-1 ${usernameAvailability.available === true
                       ? 'text-green-600'
                       : usernameAvailability.available === false
                         ? 'text-red-600'
                         : 'text-gray-600'
-                    }`}>
+                      }`}
+                  >
                     {usernameAvailability.message}
-                  </p>
+                  </motion.p>
                 )}
                 {!errors.userName && !usernameAvailability.message && watchedUsername && watchedUsername.length >= 3 && (
-                  <p className="text-xs text-gray-500 mt-1">
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-xs text-gray-500 mt-1"
+                  >
                     Username must be 3-20 characters, letters, numbers, and underscores only
-                  </p>
+                  </motion.p>
                 )}
               </div>
 
@@ -524,7 +596,7 @@ const Signup = () => {
                         <button
                           type="button"
                           onClick={addSkill}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
                         >
                           Add
                         </button>
@@ -540,7 +612,7 @@ const Signup = () => {
                               <button
                                 type="button"
                                 onClick={() => removeSkill(skill)}
-                                className="ml-2 text-blue-500 hover:text-blue-700"
+                                className="ml-2 text-blue-500 hover:text-blue-700 cursor-pointer"
                               >
                                 ×
                               </button>
@@ -591,7 +663,7 @@ const Signup = () => {
                       <button
                         type="button"
                         onClick={() => setAccountType('individual')}
-                        className={`p-3 rounded-lg border-2 text-center transition-all ${accountType === 'individual'
+                        className={`p-3 rounded-lg border-2 text-center transition-all cursor-pointer ${accountType === 'individual'
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                           }`}
@@ -603,7 +675,7 @@ const Signup = () => {
                       <button
                         type="button"
                         onClick={() => setAccountType('company')}
-                        className={`p-3 rounded-lg border-2 text-center transition-all ${accountType === 'company'
+                        className={`p-3 rounded-lg border-2 text-center transition-all cursor-pointer ${accountType === 'company'
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                           }`}
@@ -646,7 +718,7 @@ const Signup = () => {
                           {...register('companyCategory', {
                             required: accountType === 'company' ? 'Company category is required' : false
                           })}
-                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none ${errors.companyCategory ? 'border-red-300' : 'border-gray-300'
+                          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none cursor-pointer ${errors.companyCategory ? 'border-red-300' : 'border-gray-300'
                             }`}
                         >
                           <option value="">Select category</option>
@@ -676,10 +748,10 @@ const Signup = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  disabled={loading || registrationLoading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center space-x-2"
                 >
-                  {loading ? (
+                  {(loading || registrationLoading) ? (
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
                   ) : (
                     <>

@@ -366,16 +366,91 @@ const verifyPasswordResetOTP = asyncHandler(async (req, res) => {
      const resetToken = user.generatePasswordResetToken();
      await user.save({ validateBeforeSave: false });
 
+     // Set reset token as httpOnly cookie
+     res.cookie('resetToken', resetToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "strict",
+          maxAge: 10 * 60 * 1000 // 10 minutes expiry
+     });
+
      res.status(200).json(new ApiResponse(
           200,
           {
-               resetToken,
                email: user.email,
                message: "OTP verified successfully. You can now reset your password."
           },
           "OTP verified successfully"
      ));
 })
+
+// Reset Password with OTP Token
+const resetPasswordWithToken = asyncHandler(async (req, res) => {
+     const { newPassword } = req.body;
+
+     // Get reset token from cookies
+     const resetToken = req.cookies.resetToken;
+
+     if (!resetToken || !newPassword) {
+          throw new ApiError(400, "Reset token and new password are required");
+     }
+
+     // Validate password strength (same as registration)
+     if (newPassword.length < 6) {
+          throw new ApiError(400, "Password must be at least 6 characters long");
+     }
+
+     try {
+          // Verify the reset token
+          const decoded = jwt.verify(resetToken, process.env.RESET_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET);
+
+          // Find user by ID from token
+          const user = await User.findById(decoded._id);
+          if (!user) {
+               throw new ApiError(400, "Invalid reset token");
+          }
+
+          // Update password
+          user.password = newPassword;
+          user.resetPasswordToken = null; // Clear reset token
+          user.refreshToken = null; // Clear existing refresh tokens for security
+          user.passwordResetOTP = null; // Clear OTP
+          user.passwordResetOTPExpires = null; // Clear OTP expiry
+
+          await user.save();
+
+          // Clear the reset token cookie
+          res.clearCookie('resetToken', {
+               httpOnly: true,
+               secure: true,
+               sameSite: "strict"
+          });
+
+          // Remove sensitive data
+          const userResponse = user.toObject();
+          delete userResponse.password;
+          delete userResponse.refreshToken;
+          delete userResponse.resetPasswordToken;
+          delete userResponse.passwordResetOTP;
+          delete userResponse.passwordResetOTPExpires;
+
+          res.status(200).json(new ApiResponse(
+               200,
+               {
+                    message: "Password reset successful"
+               },
+               "Password has been reset successfully"
+          ));
+
+     } catch (error) {
+          if (error.name === 'TokenExpiredError') {
+               throw new ApiError(400, "Reset token has expired");
+          } else if (error.name === 'JsonWebTokenError') {
+               throw new ApiError(400, "Invalid reset token");
+          }
+          throw error;
+     }
+});
 
 // Reset Password
 const resetPassword = asyncHandler(async (req, res) => {
@@ -461,4 +536,4 @@ const checkUsernameAvailability = asyncHandler(async (req, res) => {
      ));
 });
 
-export { register, verifyEmailOTP, resendEmailOTP, login, verifyUser, refreshtoken, logoutUser, forgotPassword, verifyPasswordResetOTP, resetPassword, checkUsernameAvailability }
+export { register, verifyEmailOTP, resendEmailOTP, login, verifyUser, refreshtoken, logoutUser, forgotPassword, verifyPasswordResetOTP, resetPassword, resetPasswordWithToken, checkUsernameAvailability }

@@ -7,6 +7,8 @@ import { useEffect } from "react"
 import Login from "./pages/authentication/Login"
 import Signup from "./pages/authentication/Signup"
 import ForgotPassword from "./pages/authentication/ForgotPassword"
+import OTPVerification from "./pages/authentication/OTPVerification"
+import ResetPassword from "./pages/authentication/ResetPassword"
 import AuthLayout from "./layout/AuthLayout"
 import ProtectedLayout from "./layout/ProtectedLayout"
 
@@ -92,6 +94,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="signup" element={<Signup />} />
           <Route path="forgotpassword" element={<ForgotPassword />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="otp-verification" element={<OTPVerification />} />
+          <Route path="reset-password" element={<ResetPassword />} />
         </Route>
 
       </Routes>

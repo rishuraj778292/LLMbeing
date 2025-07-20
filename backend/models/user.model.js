@@ -465,6 +465,26 @@ userSchema.methods.verifyPasswordResetOTP = function (otp) {
     return false;
 }
 
+// Generate password reset token (JWT)
+userSchema.methods.generatePasswordResetToken = function () {
+    const payload = {
+        _id: this._id,
+        type: 'password_reset'
+    };
+
+    // Generate JWT token with 1 hour expiration
+    const token = jwt.sign(
+        payload,
+        process.env.RESET_TOKEN_SECRET || process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: '1h' }
+    );
+
+    // Store the token in the user document for verification
+    this.resetPasswordToken = token;
+
+    return token;
+}
+
 // Verify password reset token
 userSchema.statics.findByResetToken = function (token) {
     try {

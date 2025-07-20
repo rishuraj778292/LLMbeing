@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, verifyEmailOTP, resendEmailOTP, login, verifyUser, refreshtoken, logoutUser, forgotPassword, verifyPasswordResetOTP, resetPassword, checkUsernameAvailability } from "../controllers/auth.controller.js";
+import { register, verifyEmailOTP, resendEmailOTP, login, verifyUser, refreshtoken, logoutUser, forgotPassword, verifyPasswordResetOTP, resetPassword, resetPasswordWithToken, checkUsernameAvailability } from "../controllers/auth.controller.js";
 import { registerValidator, forgotPasswordValidator, resetPasswordValidator, emailOTPValidator, passwordResetOTPValidator } from "../middleware/authValidator.middleware.js";
 import verifyToken from "../middleware/verifyToken.middleware.js";
 const router = Router();
@@ -19,5 +19,6 @@ router.route("/check-username/:username").get(checkUsernameAvailability);
 router.route("/forgot-password").post(forgotPasswordValidator, forgotPassword);
 router.route("/verify-reset-otp").post(passwordResetOTPValidator, verifyPasswordResetOTP);
 router.route("/reset-password/:token").post(resetPasswordValidator, resetPassword);
+router.route("/reset-password").post(resetPasswordWithToken);
 
 export default router;
