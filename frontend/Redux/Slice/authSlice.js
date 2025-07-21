@@ -98,6 +98,7 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.isAuthenticated = true;
         state.loginStatus = 'succeeded';
+        state.verifyStatus = 'succeeded'
         state.loginError = null;
       })
       .addCase(login.rejected, (state, action) => {
