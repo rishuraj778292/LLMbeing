@@ -7,13 +7,5 @@ export default defineConfig({
   plugins: [react(), 
     tailwindcss(),
   ],
-  server:{
-      proxy:{
-        '/api':{
-          target: import.meta.env.REACT_APP_BACKEND_URL,
-          changeOrigin:true,
-          secure:false,
-        }
-      }
-  }
+ 
 })

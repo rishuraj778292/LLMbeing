@@ -8,7 +8,7 @@ export const setStore = (_store) => {
   store = _store;
 }
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.REACT_APP_BACKEND_URL, // Use .env variable for baseURL
+  baseURL: import.meta.env.VITE_API_BASE_URL, // Use Vite .env variable for baseURL
   withCredentials: true, // IMPORTANT: Cookies ko bhejne ke liye
 });
 
