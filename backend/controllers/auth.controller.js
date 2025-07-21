@@ -215,12 +215,12 @@ const login = asyncHandler(async (req, res) => {
      res.cookie(process.env.REFRESH_TOKEN_NAME, refreshToken, {
           httpOnly: true,
           secure: true,
-          sameSite: "strict"
+          sameSite: "None"
      })
      res.cookie(process.env.ACCESS_TOKEN_NAME, accessToken, {
           httpOnly: true,
           secure: true,
-          sameSite: "strict"
+          sameSite: "None"
      })
      res.status(200).json(new ApiResponse(
           200,
@@ -238,12 +238,12 @@ const logoutUser = asyncHandler(async (req, res) => {
      console.log("recieved")
      res.clearCookie(process.env.ACCESS_TOKEN_NAME, {
           httpOnly: true,
-          sameSite: "strict",
+          sameSite: "None",
           secure: true,
      });
      res.clearCookie(process.env.REFRESH_TOKEN_NAME, {
           httpOnly: true,
-          sameSite: "strict",
+          sameSite: "None",
           secure: true,
      })
      res.status(200).send(new ApiResponse(200, {}, "logout successfully"))
@@ -278,7 +278,7 @@ const refreshtoken = asyncHandler(async (req, res) => {
      res.cookie(process.env.ACCESS_TOKEN_NAME, accessToken, {
           secure: true,
           httpOnly: true,
-          sameSite: "strict"
+          sameSite: "None"
      }).json(new ApiResponse(200, user, "token refreshed successfully"))
 })
 
@@ -370,7 +370,7 @@ const verifyPasswordResetOTP = asyncHandler(async (req, res) => {
      res.cookie('resetToken', resetToken, {
           httpOnly: true,
           secure: true,
-          sameSite: "strict",
+          sameSite: "None",
           maxAge: 10 * 60 * 1000 // 10 minutes expiry
      });
 
@@ -423,7 +423,7 @@ const resetPasswordWithToken = asyncHandler(async (req, res) => {
           res.clearCookie('resetToken', {
                httpOnly: true,
                secure: true,
-               sameSite: "strict"
+               sameSite: "None"
           });
 
           // Remove sensitive data
