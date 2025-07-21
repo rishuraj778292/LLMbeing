@@ -285,10 +285,31 @@ const Dashboard = () => {
         </div>
     );
 
-    if (!user || verifyStatus === 'loading') {
+
+    // Debug logs for authentication state
+    console.log('Dashboard user:', user);
+    console.log('Dashboard verifyStatus:', verifyStatus);
+
+    if (verifyStatus === 'loading') {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
+    if (verifyStatus === 'failed') {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-red-600 text-xl">Failed to load user data. Please try logging in again.</div>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-gray-600 text-xl">No user data found. Please log in.</div>
             </div>
         );
     }

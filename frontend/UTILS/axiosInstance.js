@@ -8,7 +8,7 @@ export const setStore = (_store) => {
   store = _store;
 }
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3300', // Direct connection to backend for testing
+  baseURL: import.meta.env.VITE_API_BASE_URL, // Use .env variable for baseURL
   withCredentials: true, // IMPORTANT: Cookies ko bhejne ke liye
 });
 
