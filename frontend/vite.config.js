@@ -10,7 +10,7 @@ export default defineConfig({
   server:{
       proxy:{
         '/api':{
-          target:'http://localhost:3300',
+          target: import.meta.env.REACT_APP_BACKEND_URL,
           changeOrigin:true,
           secure:false,
         }
