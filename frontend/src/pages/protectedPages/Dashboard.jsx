@@ -15,17 +15,20 @@ import {
     Calendar,
     ArrowRight,
     Plus,
-    Eye
+    Eye,
+    Bookmark
 } from 'lucide-react';
 import { fetchOwnProjects } from '../../../Redux/Slice/projectSlice';
 import { getUserApplications, getClientApplications } from '../../../Redux/Slice/applicationSlice';
+import { fetchSavedProjects } from '../../../Redux/Slice/savedProjectSlice';
 
 const Dashboard = () => {
     const dispatch = useDispatch();
-    const { user } = useSelector(state => state.auth);
+    const { user, verifyStatus } = useSelector(state => state.auth);
     const { ownProjects } = useSelector(state => state.projects);
-    const applicationState = useSelector(state => state.application);
+    const applicationState = useSelector(state => state.applications);
     const { userApplications = [], clientApplications = [] } = applicationState || {};
+    const { total: savedProjectsCount } = useSelector(state => state.savedProjects);
 
     const [dashboardStats, setDashboardStats] = useState({
         totalEarnings: 0,
@@ -97,6 +100,9 @@ const Dashboard = () => {
 
     useEffect(() => {
         if (user) {
+            // Fetch saved projects count for all users
+            dispatch(fetchSavedProjects({ page: 1, limit: 1 })); // Just to get the total count
+
             // Fetch user's projects if they're a client
             if (user.role === 'client') {
                 dispatch(fetchOwnProjects());
@@ -255,6 +261,16 @@ const Dashboard = () => {
                         </>
                     )}
                     <Link
+                        to="/manage-projects/saved"
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        <div className="flex items-center space-x-3">
+                            <Bookmark className="h-5 w-5 text-indigo-600" />
+                            <span className="font-medium text-gray-900">Saved Projects</span>
+                        </div>
+                        <ArrowRight className="h-4 w-4 text-gray-400" />
+                    </Link>
+                    <Link
                         to="/profile"
                         className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                     >
@@ -269,7 +285,7 @@ const Dashboard = () => {
         </div>
     );
 
-    if (!user) {
+    if (!user || verifyStatus === 'loading') {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -294,7 +310,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                     <StatCard
                         icon={DollarSign}
                         title={user.role === 'client' ? 'Total Spent' : 'Total Earned'}
@@ -318,6 +334,12 @@ const Dashboard = () => {
                         title={user.role === 'client' ? 'Pending Applications' : 'Pending Applications'}
                         value={dashboardStats.pendingApplications}
                         color="yellow"
+                    />
+                    <StatCard
+                        icon={Bookmark}
+                        title="Saved Projects"
+                        value={savedProjectsCount || 0}
+                        color="indigo"
                     />
                 </div>
 

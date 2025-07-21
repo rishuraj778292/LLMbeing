@@ -267,7 +267,7 @@ const projectSchema = new Schema({
     reports: [{
       user: {
         type: Schema.Types.ObjectId,
-        ref: 'user',
+        ref: 'User',
         required: true
       },
       reason: {
@@ -305,14 +305,14 @@ const projectSchema = new Schema({
   // Relations
   client: {
     type: Schema.Types.ObjectId,
-    ref: 'user',
+    ref: 'User',
     required: true,
     index: true
   },
 
   assignedFreelancer: {
     type: Schema.Types.ObjectId,
-    ref: 'user'
+    ref: 'User'
   },
 
   // System fields

@@ -1,109 +1,168 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Search, Filter, Calendar, DollarSign, MapPin, Bookmark, Trash2, BookmarkX } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  Search,
+  Bookmark,
+  AlertCircle,
+  RefreshCw
+} from 'lucide-react';
 import ProjectCard from '../../../components/projects/ProjectCard';
+import {
+  fetchSavedProjects,
+  removeAllSavedProjects,
+  resetSavedProjects
+} from '../../../../Redux/Slice/savedProjectSlice';
 
 const SavedProjects = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const {
+    savedProjects,
+    status,
+    error,
+    total,
+    page,
+    hasMore,
+    loadingMore
+  } = useSelector(state => state.savedProjects);
+
+  const { user } = useSelector(state => state.auth);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('saved-date');
-  const navigate = useNavigate();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Format location function
-  const formatLocation = (location) => {
-    if (!location) return "Remote";
-
-    // Handle new location object structure
-    if (typeof location === 'object') {
-      if (location.type === 'remote') return "Remote";
-      if (location.type === 'onsite' || location.type === 'hybrid') {
-        const parts = [];
-        if (location.city) parts.push(location.city);
-        if (location.country) parts.push(location.country);
-        if (parts.length > 0) {
-          return `${parts.join(', ')} (${location.type})`;
-        }
-        return location.type;
-      }
-      return "Remote";
+  // Fetch saved projects on component mount
+  useEffect(() => {
+    if (user && user.role === 'freelancer') {
+      dispatch(resetSavedProjects());
+      dispatch(fetchSavedProjects({ page: 1, limit: 20 }));
     }
+  }, [dispatch, user]);
 
-    // Legacy string format
-    return location || "Remote";
+  // Load more projects
+  const loadMoreProjects = () => {
+    if (hasMore && !loadingMore) {
+      dispatch(fetchSavedProjects({
+        page: page + 1,
+        limit: 20,
+        search: searchTerm
+      }));
+    }
   };
 
-  // Format budget function
-  const formatBudget = (budget) => {
-    if (!budget) return "Not specified";
+  // Handle search
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
 
-    // Handle new budget object structure
-    if (typeof budget === 'object') {
-      // For hourly projects
-      if (budget.hourlyRate) {
-        const { min, max } = budget.hourlyRate;
-        if (min && max) {
-          return `$${min.toLocaleString()}-$${max.toLocaleString()}/hr`;
-        } else if (min) {
-          return `$${min.toLocaleString()}+/hr`;
-        }
-        return "Hourly rate";
-      }
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      dispatch(resetSavedProjects());
+      dispatch(fetchSavedProjects({
+        page: 1,
+        limit: 20,
+        search: value,
+        sortBy: sortBy
+      }));
+    }, 500);
 
-      // For fixed price projects
-      if (budget.min !== undefined || budget.max !== undefined) {
-        if (budget.min && budget.max) {
-          return `$${budget.min.toLocaleString()}-$${budget.max.toLocaleString()}`;
-        } else if (budget.min) {
-          return `$${budget.min.toLocaleString()}+`;
-        } else if (budget.max) {
-          return `Up to $${budget.max.toLocaleString()}`;
-        }
-      }
-
-      return "Budget not specified";
-    }
-
-    // Legacy format handling
-    const numericBudget = typeof budget === 'number' ? budget : parseFloat(budget);
-    if (isNaN(numericBudget)) return budget;
-    return `$${numericBudget.toLocaleString()}`;
+    return () => clearTimeout(timeoutId);
   };
 
-  // No saved projects currently
-  const savedProjects = [];
+  // Handle sort change
+  const handleSortChange = (newSortBy) => {
+    setSortBy(newSortBy);
+    dispatch(resetSavedProjects());
+    dispatch(fetchSavedProjects({
+      page: 1,
+      limit: 20,
+      search: searchTerm,
+      sortBy: newSortBy
+    }));
+  };
+
+  // Handle delete all saved projects
+  const handleDeleteAll = async () => {
+    try {
+      await dispatch(removeAllSavedProjects()).unwrap();
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      console.error('Failed to delete all saved projects:', error);
+    }
+  };
 
   const handleBrowseProjects = () => {
     navigate('/projects');
   };
 
-  const filteredProjects = savedProjects.filter(project =>
-    project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.skillsRequired?.some(skill =>
-      skill.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
-
-  const sortedProjects = [...filteredProjects].sort((a, b) => {
-    switch (sortBy) {
-      case 'saved-date':
-        return new Date(b.savedAt) - new Date(a.savedAt);
-      case 'posted-date':
-        return new Date(b.postedAt) - new Date(a.postedAt);
-      case 'budget-high':
-        return (b.budget || 0) - (a.budget || 0);
-      case 'budget-low':
-        return (a.budget || 0) - (b.budget || 0);
-      case 'alphabetical':
-        return a.title.localeCompare(b.title);
-      default:
-        return 0;
-    }
-  });
-
-  const handleRemoveFromSaved = (projectId) => {
-    // Handle removing project from saved list
-    console.log('Removing project from saved:', projectId);
+  const handleRefresh = () => {
+    dispatch(resetSavedProjects());
+    dispatch(fetchSavedProjects({
+      page: 1,
+      limit: 20,
+      search: searchTerm,
+      sortBy: sortBy
+    }));
   };
+
+  // If user is not a freelancer, show appropriate message
+  if (user && user.role !== 'freelancer') {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 sm:p-12 text-center">
+            <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Saved Projects</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              This feature is available for freelancers only. Clients can manage their projects through the "Manage Projects" section.
+            </p>
+            <button
+              onClick={() => navigate('/manage-projects')}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2"
+            >
+              Manage Projects
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'loading' && savedProjects.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'failed') {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to load saved projects</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={handleRefresh}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <RefreshCw className="h-4 w-4 inline mr-2" />
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
@@ -117,12 +176,21 @@ const SavedProjects = () => {
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-xs sm:text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
-                {sortedProjects.length} project{sortedProjects.length !== 1 ? 's' : ''} saved
+                {total} project{total !== 1 ? 's' : ''} saved
               </div>
+              {total > 0 && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-red-600 hover:text-red-700 text-sm font-medium"
+                >
+                  Clear All
+                </button>
+              )}
             </div>
           </div>
         </div>
 
+        {/* Search and Filter */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
             <div className="flex-1 relative">
@@ -131,7 +199,7 @@ const SavedProjects = () => {
                 type="text"
                 placeholder="Search saved projects..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearch}
                 className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -139,7 +207,7 @@ const SavedProjects = () => {
             <div className="flex items-center space-x-2">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
                 className="px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="saved-date">Recently Saved</option>
@@ -150,129 +218,89 @@ const SavedProjects = () => {
               </select>
             </div>
           </div>
-
-          {savedProjects.length > 0 && (
-            <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600">
-              {sortedProjects.length} of {savedProjects.length} saved projects
-            </div>
-          )}
         </div>
 
         {/* Projects List */}
-        {sortedProjects.length > 0 ? (
-          <div className="space-y-4">
-            {sortedProjects.map((project) => (
-              <div key={project._id} className="relative group">
-                {/* Saved Badge */}
-                <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-                  <div className="bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                    <Bookmark className="w-3 h-3" />
-                    Saved {new Date(project.savedAt).toLocaleDateString()}
-                  </div>
-                  <button
-                    onClick={() => handleRemoveFromSaved(project._id)}
-                    className="p-1 bg-white border border-red-200 rounded-full text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors opacity-0 group-hover:opacity-100"
-                    title="Remove from saved"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Project Card */}
-                <div className="bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md transition-all duration-300">
-                  <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                    {/* Main Content */}
-                    <div className="flex-1">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
-                        <h3 className="font-bold text-lg text-slate-800 hover:text-blue-600 cursor-pointer transition-colors">
-                          {project.title}
-                        </h3>
-                        <div className="flex items-center bg-blue-50 px-3 py-1 rounded-full text-blue-600 font-medium whitespace-nowrap">
-                          {formatBudget(project.budget)}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center text-sm text-slate-500 mb-3">
-                        <span className="hover:text-blue-500 transition-colors cursor-pointer">{project.clientName}</span>
-                        <span className="mx-2 text-slate-300">•</span>
-                        <span>{formatLocation(project.location)}</span>
-                        <span className="mx-2 text-slate-300">•</span>
-                        <span>Posted {new Date(project.postedAt).toLocaleDateString()}</span>
-                      </div>
-
-                      <p className="text-slate-600 text-sm mb-3 line-clamp-2">
-                        {project.description}
-                      </p>
-
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {project.skillsRequired?.slice(0, 5).map((skill, index) => (
-                          <span
-                            key={index}
-                            className="bg-slate-100 text-slate-600 text-xs px-3 py-1 rounded-full hover:bg-blue-100 hover:text-blue-600 transition-colors"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                        {project.skillsRequired?.length > 5 && (
-                          <span className="text-xs text-slate-500">+{project.skillsRequired.length - 5} more</span>
-                        )}
-                      </div>
-
-                      {project.category && (
-                        <div className="inline-flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                          {project.category}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-row lg:flex-col gap-2 lg:items-end">
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition-colors whitespace-nowrap">
-                        Apply Now
-                      </button>
-                      <button className="border border-slate-300 hover:bg-slate-50 text-slate-600 text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap">
-                        View Details
-                      </button>
+        {savedProjects.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 gap-6">
+              {savedProjects.map((savedProject) => (
+                <div key={savedProject._id} className="relative">
+                  {/* Saved Badge */}
+                  <div className="absolute top-4 right-4 z-10">
+                    <div className="bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                      <Bookmark className="w-3 h-3" />
+                      Saved {new Date(savedProject.createdAt).toLocaleDateString()}
                     </div>
                   </div>
+
+                  {/* Use ProjectCard component */}
+                  <ProjectCard
+                    project={savedProject.project}
+                    viewMode="list"
+                  />
                 </div>
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="mt-8 text-center">
+                <button
+                  onClick={loadMoreProjects}
+                  disabled={loadingMore}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More Projects'
+                  )}
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
           /* Empty State */
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-            <div className="text-center py-12 sm:py-16 px-6 sm:px-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 sm:p-12 text-center">
+            <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No saved projects yet</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Save projects that interest you to easily find them later. Click the bookmark icon on any project to save it.
+            </p>
+            <button
+              onClick={handleBrowseProjects}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2"
+            >
+              Browse Projects
+            </button>
+          </div>
+        )}
 
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">No saved projects</h3>
-              <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-6 sm:mb-8 max-w-md lg:max-w-lg mx-auto">
-                {searchTerm
-                  ? "No saved projects match your search criteria. Try different keywords or browse all projects to find opportunities to save."
-                  : "Start saving projects you're interested in to keep track of them easily. Use the bookmark feature on project listings to save projects for later review."
-                }
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Clear All Saved Projects?</h3>
+              <p className="text-gray-600 mb-6">
+                This will remove all {total} saved projects from your list. This action cannot be undone.
               </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                {searchTerm ? (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium border-2 border-blue-200 rounded-lg sm:rounded-xl hover:bg-blue-50 transition-colors cursor-pointer"
-                  >
-                    Clear search
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleBrowseProjects}
-                      className="px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base bg-blue-600 text-white font-semibold rounded-lg sm:rounded-xl hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl cursor-pointer"
-                    >
-                      Browse Projects
-                    </button>
-                    <button className="px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base border-2 border-gray-300 text-gray-700 font-semibold rounded-lg sm:rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">
-                      Learn About Saving
-                    </button>
-                  </>
-                )}
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAll}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                >
+                  Clear All
+                </button>
               </div>
             </div>
           </div>

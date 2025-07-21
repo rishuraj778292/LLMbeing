@@ -1,4 +1,3 @@
-
 // import React from 'react'
 
 // const ProjectCard = React.forwardRef(({ project },ref) => {
@@ -69,7 +68,7 @@ import {
   Tag,
   DollarSign,
   Heart,
-  BookmarkPlus,
+  Bookmark,
   ThumbsDown,
   Eye,
   ExternalLink
@@ -77,15 +76,20 @@ import {
 import {
   toggleLike,
   toggleDislike,
-  toggleBookmark,
   updateProjectInteraction
 } from '../../../Redux/Slice/projectSlice';
+import { toggleSaveProject } from '../../../Redux/Slice/savedProjectSlice';
 import { getCategoryLabel } from '../../utils/aiCategories';
 
 const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
+  const { savedProjectIds, toggleLoading } = useSelector(state => state.savedProjects);
+
+  // Check if this project is saved
+  const isSaved = savedProjectIds.includes(project._id);
+  const isToggleLoading = toggleLoading[project._id];
 
   // Format location function
   const formatLocation = (location) => {
@@ -195,13 +199,8 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
 
     try {
       await dispatch(toggleLike(project._id)).unwrap();
-    } catch (error) {
-      // Revert optimistic update on error
-      dispatch(updateProjectInteraction({
-        projectId: project._id,
-        type: 'like',
-        isActive: project.isLiked
-      }));
+    } catch {
+      console.error('Failed to toggle like');
     }
   };
 
@@ -221,13 +220,8 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
 
     try {
       await dispatch(toggleDislike(project._id)).unwrap();
-    } catch (error) {
-      // Revert optimistic update on error
-      dispatch(updateProjectInteraction({
-        projectId: project._id,
-        type: 'dislike',
-        isActive: project.isDisliked
-      }));
+    } catch {
+      console.error('Failed to toggle dislike');
     }
   };
 
@@ -238,22 +232,15 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
       return;
     }
 
-    // Optimistic update
-    dispatch(updateProjectInteraction({
-      projectId: project._id,
-      type: 'bookmark',
-      isActive: !project.isBookmarked
-    }));
+    // Only freelancers can save projects
+    if (user.role !== 'freelancer') {
+      return;
+    }
 
     try {
-      await dispatch(toggleBookmark(project._id)).unwrap();
+      await dispatch(toggleSaveProject(project._id)).unwrap();
     } catch (error) {
-      // Revert optimistic update on error
-      dispatch(updateProjectInteraction({
-        projectId: project._id,
-        type: 'bookmark',
-        isActive: project.isBookmarked
-      }));
+      console.error('Failed to toggle save project:', error);
     }
   };
 
@@ -370,15 +357,20 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
               {project.dislikesCount > 0 && <span className="text-xs">{project.dislikesCount}</span>}
             </button>
 
-            <button
-              onClick={handleBookmark}
-              className={`flex items-center gap-2 transition-colors p-2 rounded-lg ${project.isBookmarked
-                ? 'text-blue-500 bg-blue-50'
-                : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'
-                }`}
-            >
-              <BookmarkPlus className={`w-4 h-4 ${project.isBookmarked ? 'fill-current' : ''}`} />
-            </button>
+            {user?.role === 'freelancer' && (
+              <button
+                onClick={handleBookmark}
+                disabled={isToggleLoading}
+                className={`flex items-center gap-2 transition-colors p-2 rounded-lg ${isSaved
+                  ? 'text-blue-500 bg-blue-50'
+                  : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'
+                  } ${isToggleLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={isSaved ? 'Remove from saved projects' : 'Save project'}
+              >
+                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                {isToggleLoading && <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>}
+              </button>
+            )}
 
             <div className="flex gap-2">
               <button
@@ -446,15 +438,19 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
               <ThumbsDown className={`w-4 h-4 ${project.isDisliked ? 'fill-current' : ''}`} />
             </button>
 
-            <button
-              onClick={handleBookmark}
-              className={`transition-colors p-1 ${project.isBookmarked
-                ? 'text-blue-500'
-                : 'text-gray-400 hover:text-blue-500'
-                }`}
-            >
-              <BookmarkPlus className={`w-4 h-4 ${project.isBookmarked ? 'fill-current' : ''}`} />
-            </button>
+            {user?.role === 'freelancer' && (
+              <button
+                onClick={handleBookmark}
+                disabled={isToggleLoading}
+                className={`transition-colors p-1 ${isSaved
+                  ? 'text-blue-500'
+                  : 'text-gray-400 hover:text-blue-500'
+                  } ${isToggleLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={isSaved ? 'Remove from saved projects' : 'Save project'}
+              >
+                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+              </button>
+            )}
           </div>
         </div>
 

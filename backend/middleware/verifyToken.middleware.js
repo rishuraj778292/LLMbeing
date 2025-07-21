@@ -8,6 +8,7 @@ const verifyToken = asyncHandler((req,res,next)=>{
        try {
          const decode = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET);
          req.user = decode; // attach user into request
+         console.log(req.user)
          next();
        } catch (error) {
          throw new ApiError(401,"Token expired")

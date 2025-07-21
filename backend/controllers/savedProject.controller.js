@@ -8,7 +8,8 @@ import User from "../models/user.model.js";
 
 // get user saved projects
 const getUserSavedProjects = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    console.log("inside saved route",req.user)
+    const userId = req.user._id;
     if (!userId) throw new ApiError(400, "User ID not found");
 
     // Only freelancers can save projects
@@ -53,7 +54,7 @@ const getUserSavedProjects = asyncHandler(async (req, res) => {
 
 // toggle save/unsave project
 const toggleSaveProject = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { projectId } = req.params;
 
     if (!userId) throw new ApiError(400, "User ID not found");
@@ -87,7 +88,7 @@ const toggleSaveProject = asyncHandler(async (req, res) => {
 
 // delete specific saved project
 const deleteSavedProject = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { projectId } = req.params;
 
     if (!userId) throw new ApiError(400, "User ID not found");
@@ -120,7 +121,7 @@ const deleteSavedProject = asyncHandler(async (req, res) => {
 
 // delete all user saved projects
 const deleteAllSavedProjects = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
+    const userId = req.user._id;
     if (!userId) throw new ApiError(400, "User ID not found");
 
     // Only freelancers can manage saved projects

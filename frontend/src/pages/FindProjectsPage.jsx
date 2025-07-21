@@ -22,6 +22,7 @@ import {
     updateFilters
 } from '../../Redux/Slice/projectSlice';
 import { getUserApplications } from '../../Redux/Slice/applicationSlice';
+import { fetchSavedProjects } from '../../Redux/Slice/savedProjectSlice';
 import { getCategoryLabel } from '../utils/aiCategories';
 
 const FindProjectsPage = () => {
@@ -86,6 +87,13 @@ const FindProjectsPage = () => {
     useEffect(() => {
         if (user?.role === 'freelancer') {
             dispatch(getUserApplications({ limit: 1000 })); // Get all applications to track applied projects
+        }
+    }, [dispatch, user]);
+
+    // Fetch saved projects to track which projects are bookmarked
+    useEffect(() => {
+        if (user) {
+            dispatch(fetchSavedProjects({ limit: 1000 })); // Get all saved projects to track bookmarked projects
         }
     }, [dispatch, user]);
 

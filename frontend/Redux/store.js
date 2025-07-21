@@ -4,6 +4,7 @@ import projectReducer from './Slice/projectSlice'
 import profileReducer from './Slice/profileSlice'
 import applicationReducer from './Slice/applicationSlice'
 import gigReducer from './Slice/gigSlice'
+import savedProjectReducer from './Slice/savedProjectSlice'
 console.log('store loaded');
 export const store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
     profile: profileReducer,
     applications: applicationReducer,
     gigs: gigReducer,
+    savedProjects: savedProjectReducer,
   },
 })
