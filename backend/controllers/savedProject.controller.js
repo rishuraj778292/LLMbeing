@@ -8,7 +8,7 @@ import User from "../models/user.model.js";
 
 // get user saved projects
 const getUserSavedProjects = asyncHandler(async (req, res) => {
-    console.log("inside saved route",req.user)
+    
     const userId = req.user._id;
     if (!userId) throw new ApiError(400, "User ID not found");
 

@@ -9,6 +9,10 @@ dotenv.config()
 
 // register
 const register = asyncHandler(async (req, res) => {
+     // checking for duplicate user
+     const email  = req.body.email;
+     const userExists = User.findOne({email:email});
+     if(userExists) throw new ApiError(500,"User allready registered")
      // Create user but don't mark as verified yet
      const newUser = await User.create(req.body);
 
@@ -167,12 +171,12 @@ const login = asyncHandler(async (req, res) => {
      // find the user
      // password check
      // acess and refresh token
-     console.log(req.body);
+     
      const userData = req.body;
      const emailOrUserName = userData.emailOrUserName;
      const password = userData.password;
      const remember = userData.remember;
-     console.log(emailOrUserName)
+    
 
      // finging user
      const user = await User.findOne({

@@ -279,7 +279,6 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
                 {project.title}
               </h3>
               <div className="flex items-center bg-blue-50 px-3 py-1 rounded-full text-blue-600 font-medium whitespace-nowrap">
-                <DollarSign className="h-4 w-4 mr-1" />
                 {formatBudget(project.budget)}
               </div>
             </div>
