@@ -11,7 +11,7 @@ dotenv.config()
 const register = asyncHandler(async (req, res) => {
      // checking for duplicate user
      const email  = req.body.email;
-     const userExists = User.findOne({email:email});
+     const userExists = await User.findOne({email:email});
      if(userExists) throw new ApiError(500,"User allready registered")
      // Create user but don't mark as verified yet
      const newUser = await User.create(req.body);
