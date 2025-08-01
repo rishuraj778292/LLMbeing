@@ -5,7 +5,7 @@
 
 import express from 'express';
 import { quickContentCheck } from '../middleware/contentValidation.middleware.js';
-import { verifyToken } from '../middleware/verifyToken.middleware.js';
+import verifyToken from '../middleware/verifyToken.middleware.js';
 
 const router = express.Router();
 

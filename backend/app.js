@@ -6,9 +6,10 @@ const app = express()
 import dotenv from 'dotenv'
 dotenv.config()
 
-app.use(express.json(
-    // { limit: '16kb' }
-))
+// Trust proxy for secure cookies behind reverse proxy
+app.set('trust proxy', 1);
+
+app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
 app.use(cookieParser())
@@ -34,16 +35,6 @@ app.use(cors({
     credentials: true,
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }));
-
-// Handle preflight requests
-app.options('*', cors());
-
-// Additional security headers
-app.use((req, res, next) => {
-    // Trust proxy for secure cookies behind reverse proxy
-    app.set('trust proxy', 1);
-    next();
-});
 
 
 // routes import
