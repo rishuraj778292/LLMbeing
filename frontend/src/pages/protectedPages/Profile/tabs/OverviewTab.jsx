@@ -342,15 +342,20 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                 </div>
                             ) : userData.website ? (
                                 <div className="flex items-center space-x-2">
+                                   
                                     <a
-                                        href={userData.website}
+                                        href={
+                                            userData.website.startsWith("http")
+                                                ? userData.website
+                                                : `https://${userData.website}`
+                                        }
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 text-sm sm:text-base cursor-pointer"
                                     >
-                                        <span>{userData.website.replace(/^https?:\/\//, '')}</span>
-                                        <ExternalLink className="w-3 h-3" />
+                                        {userData.website}
                                     </a>
+
                                     <button
                                         onClick={() => handleInlineEdit('website')}
                                         className="text-gray-400 hover:text-gray-600 text-xs cursor-pointer"
@@ -399,7 +404,12 @@ const OverviewTab = ({ userData, onEditModal }) => {
                                 </div>
                             ) : userData.github ? (
                                 <a
-                                    href={userData.github}
+                                   
+                                    href={
+                                          userData.github.startsWith("http")
+                                                ? userData.website
+                                                : `https://${userData.github}`
+                                        }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1 text-sm sm:text-base cursor-pointer"

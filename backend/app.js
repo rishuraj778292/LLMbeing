@@ -12,11 +12,38 @@ app.use(express.json(
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
 app.use(cookieParser())
+
+// Enhanced CORS configuration for cross-origin cookie support
 app.use(cors({
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(url => url.trim()) : ["http://localhost:5173"]
-    , credentials: true
-}
-))
+    origin: function (origin, callback) {
+        // Allow requests from these origins
+        const allowedOrigins = process.env.CORS_ORIGIN ?
+            process.env.CORS_ORIGIN.split(',').map(url => url.trim()) :
+            ["http://localhost:5173", "https://llmbeing.vercel.app"];
+
+        // Allow requests with no origin (mobile apps, etc.)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+        return callback(new Error(msg), false);
+    },
+    credentials: true,
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
+// Additional security headers
+app.use((req, res, next) => {
+    // Trust proxy for secure cookies behind reverse proxy
+    app.set('trust proxy', 1);
+    next();
+});
 
 
 // routes import

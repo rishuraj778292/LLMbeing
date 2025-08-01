@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   getChatRooms,
   getChatRoomDetails,
@@ -22,6 +22,7 @@ import { Send, MoreVertical, Paperclip, Smile, Search, ArrowLeft, Circle, CheckC
 const Messages = () => {
   const dispatch = useDispatch();
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const {
     chatRooms,
@@ -29,11 +30,8 @@ const Messages = () => {
     messages,
     loading,
     unreadCounts,
-    totalUnread,
     typingUsers,
-    userStatuses,
-    page,
-    hasMore
+    userStatuses
   } = useSelector((state) => state.messages);
 
   const [selectedChat, setSelectedChat] = useState(null);
@@ -75,6 +73,11 @@ const Messages = () => {
 
     // Clean up on unmount
     return () => {
+      // Clear any timeouts
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      // Clear messages and update status
       dispatch(clearMessages());
       updateOnlineStatus(false);
     };
@@ -82,6 +85,8 @@ const Messages = () => {
 
   // Handle chat selection - Initial setup and API call
   useEffect(() => {
+    let isComponentMounted = true;
+
     if (selectedChat) {
       const roomId = selectedChat.id;
 
@@ -93,8 +98,10 @@ const Messages = () => {
       dispatch(getChatRoomDetails({ roomId, page: 1, limit: 10 }))
         .unwrap()
         .catch(error => {
-          console.error('Error loading messages:', error);
-          setLoadingError(true);
+          if (isComponentMounted) {
+            console.error('Error loading messages:', error);
+            setLoadingError(true);
+          }
         });
 
       // Join socket room and mark messages as read
@@ -103,9 +110,14 @@ const Messages = () => {
 
       // Leave room on cleanup
       return () => {
+        isComponentMounted = false;
         leaveChatRoom(roomId);
       };
     }
+
+    return () => {
+      isComponentMounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, selectedChat?.id]); // Only depend on the ID, not the whole object
 
@@ -437,21 +449,21 @@ const Messages = () => {
                     <div className="flex justify-center gap-4 mb-6">
                       {user?.role === 'freelancer' ? (
                         <button
-                          onClick={() => window.location.href = '/find-projects'}
+                          onClick={() => navigate('/projects')}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
                         >
                           Find Projects
                         </button>
                       ) : (
                         <button
-                          onClick={() => window.location.href = '/post-project'}
+                          onClick={() => navigate('/post-project')}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
                         >
                           Post a Project
                         </button>
                       )}
                       <button
-                        onClick={() => window.location.href = '/manage-applications'}
+                        onClick={() => navigate('/manage-projects/applications')}
                         className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm"
                       >
                         View Applications
@@ -843,14 +855,14 @@ const Messages = () => {
                       <div className="flex justify-center gap-4 mb-8">
                         {user?.role === 'freelancer' ? (
                           <button
-                            onClick={() => window.location.href = '/find-projects'}
+                            onClick={() => navigate('/projects')}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
                           >
                             Browse Projects
                           </button>
                         ) : (
                           <button
-                            onClick={() => window.location.href = '/manage-applications'}
+                            onClick={() => navigate('/manage-projects/applications')}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
                           >
                             Manage Applications
