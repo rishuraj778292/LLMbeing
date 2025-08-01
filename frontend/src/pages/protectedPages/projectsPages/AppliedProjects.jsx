@@ -1,20 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Eye, MessageCircle, FileText, Filter, Search, Calendar, DollarSign, MapPin, Send } from 'lucide-react';
-import { getUserApplications } from '../../../../Redux/Slice/applicationSlice';
+import { Clock, Eye, MessageCircle, FileText, Filter, Search, Calendar, DollarSign, MapPin, Send, X, AlertTriangle } from 'lucide-react';
+import { getUserApplications, withdrawApplication } from '../../../../Redux/Slice/applicationSlice';
 
 const AppliedProjects = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [withdrawingId, setWithdrawingId] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { userApplications, status, error } = useSelector((state) => state.applications);
+  const { userApplications } = useSelector((state) => state.applications);
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(getUserApplications());
+    // Load applications
+    console.log('Fetching user applications...');
+    dispatch(getUserApplications())
+      .then(action => {
+        console.log('Applications API response action:', action);
+        console.log('Applications API response payload:', action.payload);
+      })
+      .catch(err => {
+        console.error('Error fetching applications:', err);
+      });
   }, [dispatch]);
+
+  // Reload applications after a successful withdrawal
+  useEffect(() => {
+    if (showConfirmModal === false && withdrawLoading === false && withdrawingId) {
+      dispatch(getUserApplications());
+    }
+  }, [showConfirmModal, withdrawLoading, withdrawingId, dispatch]);
+
+  // Log userApplications when they change
+  useEffect(() => {
+    console.log('User applications state:', userApplications);
+    // Log the structure of each application
+    if (Array.isArray(userApplications)) {
+      userApplications.forEach((app, index) => {
+        console.log(`Application ${index}:`, app);
+        console.log(`Application ${index} project:`, app.project);
+      });
+    }
+  }, [userApplications]);
 
   // Format location function
   const formatLocation = (location) => {
@@ -83,6 +114,32 @@ const AppliedProjects = () => {
     navigate('/projects');
   };
 
+  // Handle withdraw application
+  const handleWithdrawRequest = (applicationId) => {
+    setWithdrawingId(applicationId);
+    setShowConfirmModal(true);
+  };
+
+  const handleCancelWithdraw = () => {
+    setWithdrawingId(null);
+    setShowConfirmModal(false);
+  };
+
+  const handleConfirmWithdraw = async () => {
+    if (!withdrawingId) return;
+
+    try {
+      setWithdrawLoading(true);
+      await dispatch(withdrawApplication(withdrawingId)).unwrap();
+      setShowConfirmModal(false);
+      setWithdrawingId(null);
+    } catch (error) {
+      console.error('Failed to withdraw application:', error);
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
+
   const statusOptions = [
     { value: 'all', label: 'All Applications' },
     { value: 'pending', label: 'Pending' },
@@ -111,15 +168,43 @@ const AppliedProjects = () => {
     }
   };
 
-  const filteredProjects = userApplications.filter(application => {
-    const project = application.project;
-    if (!project) return false;
+  const filteredProjects = Array.isArray(userApplications) ? userApplications.filter(application => {
+    // Skip if application is null or undefined
+    if (!application) {
+      console.log('Skipping null/undefined application');
+      return false;
+    }
 
-    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.client?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const project = application.project;
+
+    // Skip if project is null or undefined
+    if (!project) {
+      console.log('Skipping application with null/undefined project:', application._id);
+      return false;
+    }
+
+    // Log the project structure
+    console.log('Project in filter:', project);
+
+    // If project is just an ID string or ObjectId
+    if (typeof project === 'string' || (project._id && !project.title)) {
+      console.log('Project is ID only or missing title:', project);
+      // Can't filter by title, but we can still filter by status
+      return statusFilter === 'all' || application.status === statusFilter;
+    }
+
+    // Normal case with full project object
+    const matchesSearch =
+      (project.title && project.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (project.client?.name && project.client.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (project.clientName && project.clientName.toLowerCase().includes(searchTerm.toLowerCase()));
+
     const matchesStatus = statusFilter === 'all' || application.status === statusFilter;
+
+    console.log(`Application ${application._id} - Matches search: ${matchesSearch}, Matches status: ${matchesStatus}`);
+
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
   const getStatusCounts = () => {
     return statusOptions.reduce((acc, option) => {
@@ -200,10 +285,44 @@ const AppliedProjects = () => {
         </div>
 
         {/* Applications List */}
+        {/* Debug Info */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <h3 className="text-lg font-semibold mb-2">Debug Information</h3>
+          <p>UserApplications length: {userApplications.length}</p>
+          <p>Filtered Projects length: {filteredProjects.length}</p>
+          <p>Status filter: {statusFilter}</p>
+          <p>Search term: {searchTerm || '(none)'}</p>
+          <p>User role: {user?.role || 'not set'}</p>
+          <p>Auth state: {user ? 'Logged in' : 'Not logged in'}</p>
+          <button
+            onClick={() => dispatch(getUserApplications())}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Refresh Applications
+          </button>
+
+          {userApplications.length > 0 && (
+            <div className="mt-4">
+              <h4 className="font-medium">First Application Data:</h4>
+              <pre className="bg-gray-100 p-2 mt-1 rounded text-xs overflow-auto max-h-40">
+                {JSON.stringify(userApplications[0], null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+
         {filteredProjects.length > 0 ? (
           <div className="space-y-4">
             {filteredProjects.map((application) => {
-              const project = application.project;
+              // Get project data with fallbacks
+              const project = typeof application.project === 'object' ? application.project : {};
+              const projectTitle = project.title || 'Untitled Project';
+              const projectDescription = project.description || 'No description available';
+              const projectClientName =
+                (project.client?.name) ||
+                (project.clientName) ||
+                'Unknown Client';
+
               return (
                 <div key={application._id} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
                   <div className="flex flex-col lg:flex-row lg:items-start gap-6">
@@ -212,9 +331,9 @@ const AppliedProjects = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="text-xl font-semibold text-gray-900 hover:text-blue-600 cursor-pointer transition-colors">
-                            {project.title}
+                            {projectTitle || 'Untitled Project'}
                           </h3>
-                          <p className="text-gray-600 text-sm">by {project.client?.name || 'Unknown Client'}</p>
+                          <p className="text-gray-600 text-sm">by {projectClientName}</p>
                         </div>
                         <span className={`px-3 py-2 rounded-full text-sm font-medium border flex items-center space-x-2 ${getStatusColor(application.status)}`}>
                           {getStatusIcon(application.status)}
@@ -222,13 +341,15 @@ const AppliedProjects = () => {
                         </span>
                       </div>
 
-                      <p className="text-gray-700 text-sm mb-6 line-clamp-2">{project.description}</p>
+                      <p className="text-gray-700 text-sm mb-6 line-clamp-2">{projectDescription || 'No description available'}</p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div className="bg-gray-50 p-3 rounded-lg">
                           <p className="text-xs text-gray-500 mb-1">Project Budget</p>
                           <div className="flex items-center space-x-1">
-                            <span className="text-sm font-semibold text-green-600">{formatBudget(project.budget)}</span>
+                            <span className="text-sm font-semibold text-green-600">
+                              {typeof project === 'object' ? formatBudget(project.budget) : 'Not specified'}
+                            </span>
                           </div>
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg">
@@ -243,16 +364,20 @@ const AppliedProjects = () => {
                         </div>
                         <div className="bg-gray-50 p-3 rounded-lg">
                           <p className="text-xs text-gray-500 mb-1">Location</p>
-                          <span className="text-sm font-medium text-gray-900">{formatLocation(project.location)}</span>
+                          <span className="text-sm font-medium text-gray-900">
+                            {typeof project === 'object' ? formatLocation(project.location) : 'Remote'}
+                          </span>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {project.skillsRequired?.map((skill, index) => (
-                          <span key={index} className="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full">
-                            {skill}
-                          </span>
-                        ))}
+                        {project.skillsRequired && Array.isArray(project.skillsRequired) &&
+                          project.skillsRequired.map((skill, index) => (
+                            <span key={index} className="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full">
+                              {skill}
+                            </span>
+                          ))
+                        }
                       </div>
 
                       <div className="flex items-center space-x-6 text-sm text-gray-500">
@@ -260,22 +385,38 @@ const AppliedProjects = () => {
                           <Clock className="w-4 h-4" />
                           <span>Applied: {new Date(application.appliedAt).toLocaleDateString()}</span>
                         </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>Duration: {project.duration || 'Not specified'}</span>
-                        </div>
+                        {project.duration && (
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="w-4 h-4" />
+                            <span>Duration: {project.duration}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex flex-row lg:flex-col gap-3 lg:items-end">
-                      <button
-                        onClick={() => navigate(`/projects/${project.slug}`)}
-                        className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm cursor-pointer"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>View Project</span>
-                      </button>
+                      {typeof project === 'object' && (project.slug || project._id) && (
+                        <button
+                          onClick={() => navigate(`/project/${project.slug || project._id}`)}
+                          className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm cursor-pointer"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>View Project</span>
+                        </button>
+                      )}
+
+                      {/* Add withdraw button for pending or interviewing applications */}
+                      {['pending', 'interviewing'].includes(application.status) && (
+                        <button
+                          onClick={() => handleWithdrawRequest(application._id)}
+                          className="flex items-center space-x-2 px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                          <span>Withdraw</span>
+                        </button>
+                      )}
+
                       {application.status === 'interviewing' && (
                         <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm cursor-pointer">
                           <MessageCircle className="w-4 h-4" />
@@ -330,6 +471,46 @@ const AppliedProjects = () => {
           </div>
         )}
       </div>
+
+      {/* Withdraw Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 animate-fadeIn">
+            <div className="flex items-center mb-4 text-red-600">
+              <AlertTriangle className="w-6 h-6 mr-2" />
+              <h3 className="text-xl font-bold">Withdraw Application</h3>
+            </div>
+
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to withdraw this application? This action cannot be undone, and you'll need to apply again if you change your mind.
+            </p>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelWithdraw}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                disabled={withdrawLoading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmWithdraw}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
+                disabled={withdrawLoading}
+              >
+                {withdrawLoading ? (
+                  <>
+                    <span className="mr-2">Withdrawing...</span>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </>
+                ) : (
+                  'Withdraw Application'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

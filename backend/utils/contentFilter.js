@@ -8,7 +8,7 @@ const INAPPROPRIATE_WORDS = [
     // Explicit sexual content
     'porn', 'pornography', 'xxx', 'sex', 'sexual', 'nude', 'naked', 'strip',
     'escort', 'prostitute', 'brothel', 'adult entertainment', 'erotic',
-
+    'dick',
     // Offensive language
     'fuck', 'shit', 'damn', 'hell', 'bitch', 'bastard', 'asshole', 'crap',
 

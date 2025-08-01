@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { createProject } from '../../../../Redux/Slice/projectSlice';
 import { ChevronDown, Plus, X, DollarSign, Clock, Users, Tag, FileText, Target } from 'lucide-react';
 
 const ProjectPostingForm = () => {
@@ -16,6 +19,9 @@ const ProjectPostingForm = () => {
 
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const projectCategories = [
     { value: 'ai_chatbots', label: 'AI Chatbots' },
@@ -96,7 +102,7 @@ const ProjectPostingForm = () => {
 
   const validateStep = (step) => {
     const newErrors = {};
-    
+
     if (step === 1) {
       if (!formData.title || formData.title.length < 5) {
         newErrors.title = 'Title must be at least 5 characters long';
@@ -105,13 +111,13 @@ const ProjectPostingForm = () => {
         newErrors.description = 'Description must be at least 10 characters long';
       }
     }
-    
+
     if (step === 2) {
       if (!formData.budget) newErrors.budget = 'Budget is required';
       if (!formData.experienceLevel) newErrors.experienceLevel = 'Experience level is required';
       if (!formData.projectType) newErrors.projectType = 'Project type is required';
     }
-    
+
     if (step === 3) {
       if (formData.projectCategory.length === 0) {
         newErrors.projectCategory = 'At least one category is required';
@@ -120,7 +126,7 @@ const ProjectPostingForm = () => {
         newErrors.skillsRequired = 'At least one skill is required';
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -135,10 +141,73 @@ const ProjectPostingForm = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateStep(3)) {
-      console.log('Project data:', formData);
-      alert('Project posted successfully!');
+      try {
+        setIsSubmitting(true);
+        console.log('Project data:', formData);
+
+        // Parse budget from string format to proper min/max object
+        const parseBudget = (budgetString) => {
+          if (!budgetString) return { min: 0, max: 0 };
+
+          // Remove 'k' and split by 'to' or '-'
+          const cleanedString = budgetString.toLowerCase().replace(/k/g, '');
+          const parts = cleanedString.includes('to')
+            ? cleanedString.split('to').map(part => part.trim())
+            : cleanedString.includes('-')
+              ? cleanedString.split('-').map(part => part.trim())
+              : ['0', '0'];
+
+          // Handle "Above X" format
+          if (budgetString.toLowerCase().includes('above')) {
+            const value = parseInt(cleanedString.replace('above', '').trim()) || 0;
+            return { min: value, max: value * 2 }; // For "Above 50k", set max to 100k
+          }
+
+          // Convert to numbers and multiply by 1000 (because of 'k')
+          const min = parseInt(parts[0]) * 1000 || 0;
+          const max = parseInt(parts[1]) * 1000 || 0;
+
+          return { min, max };
+        };
+
+        // Map experience level to backend's expected enum values
+        const mapExperienceLevel = (level) => {
+          const mappings = {
+            'Beginner': 'Entry',
+            'Intermediate': 'Intermediate',
+            'Expert': 'Expert'
+          };
+          return mappings[level] || 'Entry';
+        };
+
+        // Create project data for API
+        const projectData = {
+          title: formData.title,
+          description: formData.description,
+          budget: parseBudget(formData.budget),
+          currency: formData.currency,
+          experienceLevel: mapExperienceLevel(formData.experienceLevel),
+          projectType: formData.projectType,
+          projectCategory: formData.projectCategory,
+          skillsRequired: formData.skillsRequired
+        };
+
+        console.log('Transformed project data:', projectData);
+
+        // Dispatch the action to create the project
+        const result = await dispatch(createProject(projectData)).unwrap();
+        console.log('Project created successfully:', result);
+
+        // Navigate to my projects page
+        navigate('/my-projects');
+      } catch (error) {
+        console.error('Error creating project:', error);
+        alert('Failed to create project: ' + (error.message || 'Unknown error'));
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -153,19 +222,17 @@ const ProjectPostingForm = () => {
     <div className="flex items-center justify-center mb-8">
       {[1, 2, 3].map((step) => (
         <div key={step} className="flex items-center">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
-            step === currentStep 
-              ? 'bg-blue-600 text-white shadow-lg' 
-              : step < currentStep 
-                ? 'bg-blue-100 text-blue-600' 
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${step === currentStep
+              ? 'bg-blue-600 text-white shadow-lg'
+              : step < currentStep
+                ? 'bg-blue-100 text-blue-600'
                 : 'bg-gray-200 text-gray-500'
-          }`}>
+            }`}>
             {step}
           </div>
           {step < 3 && (
-            <div className={`w-16 h-1 mx-2 transition-all duration-300 ${
-              step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
-            }`} />
+            <div className={`w-16 h-1 mx-2 transition-all duration-300 ${step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
+              }`} />
           )}
         </div>
       ))}
@@ -200,9 +267,8 @@ const ProjectPostingForm = () => {
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder="e.g., Build an AI-powered customer service chatbot"
-                    className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all duration-200 ${
-                      errors.title ? 'border-red-300' : 'border-gray-200 focus:border-blue-500'
-                    }`}
+                    className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all duration-200 ${errors.title ? 'border-red-300' : 'border-gray-200 focus:border-blue-500'
+                      }`}
                     maxLength={100}
                   />
                   {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
@@ -218,9 +284,8 @@ const ProjectPostingForm = () => {
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Describe your project requirements, goals, and expectations..."
                     rows={6}
-                    className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all duration-200 resize-none ${
-                      errors.description ? 'border-red-300' : 'border-gray-200 focus:border-blue-500'
-                    }`}
+                    className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all duration-200 resize-none ${errors.description ? 'border-red-300' : 'border-gray-200 focus:border-blue-500'
+                      }`}
                   />
                   {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
                   <p className="text-gray-500 text-sm mt-1">{formData.description.length} characters</p>
@@ -245,9 +310,8 @@ const ProjectPostingForm = () => {
                     <select
                       value={formData.budget}
                       onChange={(e) => handleInputChange('budget', e.target.value)}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 appearance-none bg-white transition-all duration-200 ${
-                        errors.budget ? 'border-red-300' : 'border-gray-200 focus:border-blue-500'
-                      }`}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 appearance-none bg-white transition-all duration-200 ${errors.budget ? 'border-red-300' : 'border-gray-200 focus:border-blue-500'
+                        }`}
                     >
                       <option value="">Select budget range</option>
                       {budgetOptions.map(option => (
@@ -287,11 +351,10 @@ const ProjectPostingForm = () => {
                     <div
                       key={level.value}
                       onClick={() => handleInputChange('experienceLevel', level.value)}
-                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        formData.experienceLevel === level.value
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${formData.experienceLevel === level.value
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center mb-2">
                         <Users className="text-blue-600 mr-2" size={18} />
@@ -313,11 +376,10 @@ const ProjectPostingForm = () => {
                     <div
                       key={type.value}
                       onClick={() => handleInputChange('projectType', type.value)}
-                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${
-                        formData.projectType === type.value
+                      className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md ${formData.projectType === type.value
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center mb-2">
                         <Clock className="text-blue-600 mr-2" size={18} />
@@ -349,11 +411,10 @@ const ProjectPostingForm = () => {
                       <div
                         key={category.value}
                         onClick={() => handleCategoryToggle(category.value)}
-                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm text-sm ${
-                          formData.projectCategory.includes(category.value)
+                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm text-sm ${formData.projectCategory.includes(category.value)
                             ? 'border-blue-500 bg-blue-50 text-blue-900'
                             : 'border-gray-200 hover:border-gray-300 text-gray-700'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center">
                           <Tag className="mr-2" size={14} />
@@ -386,7 +447,7 @@ const ProjectPostingForm = () => {
                       <Plus size={18} />
                     </button>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     {formData.skillsRequired.map(skill => (
                       <span
@@ -415,11 +476,10 @@ const ProjectPostingForm = () => {
               type="button"
               onClick={prevStep}
               disabled={currentStep === 1}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                currentStep === 1
+              className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${currentStep === 1
                   ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 hover:shadow-md'
-              }`}
+                }`}
             >
               Previous
             </button>
@@ -436,9 +496,17 @@ const ProjectPostingForm = () => {
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
               >
-                Post Project
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-pulse mr-2">Processing...</span>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </>
+                ) : (
+                  'Post Project'
+                )}
               </button>
             )}
           </div>

@@ -16,8 +16,18 @@ export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
   async (params, thunkAPI) => {
     try {
+      // Get applied project IDs from the application state
+      const appliedProjectIds = thunkAPI.getState()?.applications?.appliedProjectIds || [];
+      console.log('Applied project IDs before fetch:', appliedProjectIds);
+
+      // Make the API call to get projects
       const response = await projectService.getAllProjects(params);
-      return response.data;
+
+      // Add the applied project IDs to the response
+      return {
+        ...response.data,
+        appliedProjectIds
+      };
     } catch (error) {
       return thunkAPI.rejectWithValue(handleApiError(error));
     }
@@ -50,6 +60,32 @@ export const createProject = createAsyncThunk(
   }
 );
 
+// Get user's own projects
+export const getUserProjects = createAsyncThunk(
+  'projects/getUserProjects',
+  async (params = {}, thunkAPI) => {
+    try {
+      const response = await projectService.getOwnProjects(params);
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Delete a project
+export const deleteProject = createAsyncThunk(
+  'projects/deleteProject',
+  async (projectId, thunkAPI) => {
+    try {
+      const response = await projectService.deleteProject(projectId);
+      return { ...response.data, projectId };
+    } catch (error) {
+      return thunkAPI.rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
 // Update project
 export const updateProject = createAsyncThunk(
   'projects/updateProject',
@@ -63,18 +99,18 @@ export const updateProject = createAsyncThunk(
   }
 );
 
-// Delete project
-export const deleteProject = createAsyncThunk(
-  'projects/deleteProject',
-  async (projectId, thunkAPI) => {
-    try {
-      await projectService.deleteProject(projectId);
-      return projectId;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(handleApiError(error));
-    }
-  }
-);
+// // Delete project
+// export const deleteProject = createAsyncThunk(
+//   'projects/deleteProjec t',
+//   async (projectId, thunkAPI) => {
+//     try {
+//       await projectService.deleteProject(projectId);
+//       return projectId;
+//     } catch (error) {
+//       return thunkAPI.rejectWithValue(handleApiError(error));
+//     }
+//   }
+// );
 
 // Get own projects
 export const fetchOwnProjects = createAsyncThunk(
@@ -230,6 +266,8 @@ const projectSlice = createSlice({
           } else if (type === 'bookmark') {
             project.isBookmarked = isActive;
             project.bookmarksCount = isActive ? project.bookmarksCount + 1 : project.bookmarksCount - 1;
+          } else if (type === 'apply') {
+            project.hasApplied = isActive;
           }
         }
       };
@@ -245,6 +283,8 @@ const projectSlice = createSlice({
         } else if (type === 'bookmark') {
           state.currentProject.isBookmarked = isActive;
           state.currentProject.bookmarksCount = isActive ? state.currentProject.bookmarksCount + 1 : state.currentProject.bookmarksCount - 1;
+        } else if (type === 'apply') {
+          state.currentProject.hasApplied = isActive;
         }
       }
     }
@@ -254,9 +294,14 @@ const projectSlice = createSlice({
       // Fetch Projects
       .addCase(fetchProjects.pending, (state, action) => {
         const isFirstPage = action.meta.arg?.page === 1 || !action.meta.arg?.page;
+        // Set appropriate loading states
         if (isFirstPage) {
           state.status = 'loading';
-          state.projects = [];
+          // Only clear the projects array if we're doing a fresh load
+          // This prevents the UI from flashing empty while waiting for data
+          if (!state.projects.length) {
+            state.projects = [];
+          }
         } else {
           state.loadingMore = true;
         }
@@ -267,17 +312,81 @@ const projectSlice = createSlice({
         state.loadingMore = false;
         state.error = null;
 
-        const { projects, page, totalPages, total } = action.payload;
-
-        if (page === 1) {
-          state.projects = projects;
-        } else {
-          state.projects.push(...projects);
+        // Handle missing payload
+        if (!action.payload) {
+          console.error('No payload received in fetchProjects.fulfilled');
+          return;
         }
 
-        state.page = page;
-        state.totalPages = totalPages;
-        state.total = total;
+        // Extract data from payload
+        const { projects, page, totalPages, total, appliedProjectIds } = action.payload;
+
+        console.log('Fetched projects data:', {
+          projectsCount: projects?.length || 0,
+          page,
+          totalPages,
+          total,
+          appliedProjectIdsCount: appliedProjectIds?.length || 0
+        });
+
+        // Handle missing projects
+        if (!Array.isArray(projects)) {
+          console.error('Projects data is not an array:', projects);
+          state.projects = state.page === 1 ? [] : state.projects;
+          state.page = page || 1;
+          state.totalPages = totalPages || 1;
+          state.total = total || 0;
+          return;
+        }
+
+        // Get the current applied project IDs from the application state
+        const currentAppliedIds = appliedProjectIds || [];
+        console.log(`Processing ${projects.length} projects with ${currentAppliedIds.length} applied project IDs`);
+
+        // Mark projects that user has applied to
+        const projectsWithAppliedStatus = projects.map(project => {
+          // Check if this project is in the applied IDs list
+          const isApplied = currentAppliedIds.includes(project._id);
+
+          // If applied status changed, log it
+          if (isApplied !== !!project.hasApplied) {
+            console.log(`Updating applied status for project ${project._id} (${project.title}): API=${!!project.hasApplied}, Redux=${isApplied}`);
+          }
+
+          // Always use the union of both sources to be safe
+          return {
+            ...project,
+            hasApplied: isApplied || !!project.hasApplied
+          };
+        });
+
+        // When page is 1, reset the project list to avoid duplicates
+        if (page === 1) {
+          console.log(`Setting ${projectsWithAppliedStatus.length} projects for page 1`);
+          state.projects = [...projectsWithAppliedStatus];
+        } else {
+          // For subsequent pages, append new projects, avoiding duplicates
+          const existingIds = new Set(state.projects.map(p => p._id));
+          const newProjects = projectsWithAppliedStatus.filter(p => !existingIds.has(p._id));
+          console.log(`Adding ${newProjects.length} new projects from page ${page}`);
+          state.projects = [...state.projects, ...newProjects];
+        }
+
+        // Ensure all projects have correct application status based on current appliedProjectIds
+        // This is crucial after applying to a project
+        if (currentAppliedIds.length > 0) {
+          state.projects = state.projects.map(project => {
+            if (currentAppliedIds.includes(project._id)) {
+              return { ...project, hasApplied: true };
+            }
+            return project;
+          });
+        }
+
+        // Always update pagination state
+        state.page = page || 1;
+        state.totalPages = totalPages || 1;
+        state.total = total || 0;
       })
       .addCase(fetchProjects.rejected, (state, action) => {
         state.status = 'failed';

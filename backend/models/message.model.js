@@ -28,8 +28,7 @@ const messageSchema = new Schema({
     status: {
         type: String,
         enum: ['sent', 'delivered', 'read'],
-        default: 'sent',
-        index: true
+        default: 'sent'
     },
 
     // Read receipts - simple array of user IDs who read this message

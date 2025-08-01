@@ -33,6 +33,7 @@ const Projectbar = () => {
         return [
           { to: "/manage-projects/current", label: "Active Projects", count: 0 },
           { to: "/manage-projects/completed", label: "Completed Projects", count: 0 },
+          { to: "/manage-projects/applications", label: "Applications", count: 0 },
         ];
       }
     }

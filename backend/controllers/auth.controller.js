@@ -7,12 +7,33 @@ import dotenv from 'dotenv'
 import { sendEmail, createPasswordResetEmail, createEmailVerificationOTP, createPasswordResetOTP } from '../utils/emailService.js'
 dotenv.config()
 
+// Get Socket Token - Used for Socket.io authentication
+const getSocketToken = asyncHandler(async (req, res) => {
+     // Use the authenticated user from the request (added by verifyToken middleware)
+     const user = req.user;
+
+     if (!user) {
+          throw new ApiError(401, "Not authenticated");
+     }
+
+     // Generate a short-lived token specifically for socket connections (15 minutes)
+     const socketToken = jwt.sign(
+          { _id: user._id },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: "15m" }
+     );
+
+     return res.status(200).json(
+          new ApiResponse(200, { socketToken }, "Socket token generated successfully")
+     );
+});
+
 // register
 const register = asyncHandler(async (req, res) => {
      // checking for duplicate user
-     const email  = req.body.email;
-     const userExists = await User.findOne({email:email});
-     if(userExists) throw new ApiError(500,"User allready registered")
+     const email = req.body.email;
+     const userExists = await User.findOne({ email: email });
+     if (userExists) throw new ApiError(500, "User allready registered")
      // Create user but don't mark as verified yet
      const newUser = await User.create(req.body);
 
@@ -171,12 +192,12 @@ const login = asyncHandler(async (req, res) => {
      // find the user
      // password check
      // acess and refresh token
-     
+
      const userData = req.body;
      const emailOrUserName = userData.emailOrUserName;
      const password = userData.password;
      const remember = userData.remember;
-    
+
 
      // finging user
      const user = await User.findOne({
@@ -540,4 +561,4 @@ const checkUsernameAvailability = asyncHandler(async (req, res) => {
      ));
 });
 
-export { register, verifyEmailOTP, resendEmailOTP, login, verifyUser, refreshtoken, logoutUser, forgotPassword, verifyPasswordResetOTP, resetPassword, resetPasswordWithToken, checkUsernameAvailability }
+export { register, verifyEmailOTP, resendEmailOTP, login, verifyUser, refreshtoken, logoutUser, forgotPassword, verifyPasswordResetOTP, resetPassword, resetPasswordWithToken, checkUsernameAvailability, getSocketToken }

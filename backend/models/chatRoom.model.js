@@ -21,8 +21,7 @@ const ChatRoomSchema = new Schema({
     // What project this chat is about (optional)
     project: {
         type: Schema.Types.ObjectId,
-        ref: 'Project',
-        index: true
+        ref: 'Project'
     },
 
     // Basic room info

@@ -25,6 +25,8 @@ import SavedProjects from "./pages/protectedPages/projectsPages/SavedProjects"
 import AppliedProjects from "./pages/protectedPages/projectsPages/AppliedProjects"
 import CurrentProjects from "./pages/protectedPages/projectsPages/CurrentProjects"
 import CompletedProjects from './pages/protectedPages/projectsPages/CompletedProjects'
+import ManageApplications from './pages/protectedPages/projectsPages/ManageApplications'
+import MyProjects from './pages/protectedPages/projectsPages/MyProjects'
 import ProjectPostingForm from "./pages/protectedPages/projectsPages/ProjectPostingForm"
 import ContactUs from "./pages/ContactUs"
 import AboutUs from "./pages/AboutUs"
@@ -32,6 +34,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy"
 import TermsOfUsePage from "./pages/TermsOfUsePage"
 import ProjectDetailsPage from "./pages/ProjectDetailsPage"
 import ProjectApplicationPage from "./pages/ProjectApplicationPage"
+import ProjectInteractionSync from "./components/ProjectInteractionSync"
+import { useSocket } from "./hooks/useSocket"
 
 function App() {
   const dispatch = useDispatch();
@@ -39,6 +43,9 @@ function App() {
   const location = useLocation();
   const [hasInitialized, setHasInitialized] = useState(false);
   const { isAuthenticated, verifyStatus } = useSelector((state) => state.auth);
+
+  // Initialize socket connection when user is authenticated
+  useSocket();
 
   useEffect(() => {
     dispatch(verifyme());
@@ -82,6 +89,9 @@ function App() {
 
   return (
     <div >
+      {/* Global component to sync interactions between slices */}
+      <ProjectInteractionSync />
+
       <Routes>
         {/* for loggedin user and logged out both */}
         <Route path="/contactus" element={<ContactUs />} />
@@ -108,8 +118,10 @@ function App() {
             <Route path="applied" element={<AppliedProjects />} />
             <Route path="current" element={<CurrentProjects />} />
             <Route path="completed" element={<CompletedProjects />} />
+            <Route path="applications" element={<ManageApplications />} />
           </Route>
           <Route path="/post-project" element={<ProjectPostingForm />} />
+          <Route path="/my-projects" element={<MyProjects />} />
           <Route path="/gigs" element={<Gigs />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/profile" element={<Profile />} />

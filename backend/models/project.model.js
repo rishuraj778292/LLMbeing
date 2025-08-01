@@ -125,7 +125,7 @@ const projectSchema = new Schema({
   projectStatus: {
     type: String,
     enum: ["draft", "active", "in_progress", "completed", "cancelled", "paused"],
-    default: "draft",
+    default: "active",
     index: true
   },
 
@@ -251,15 +251,7 @@ const projectSchema = new Schema({
     shortlistedCount: {
       type: Number,
       default: 0
-    },
-    likeCount: {
-      type: Number,
-      default: 0
-    },
-    dislikeCount: {
-      type: Number,
-      default: 0
-    }
+    },    
   },
 
   // User Interactions

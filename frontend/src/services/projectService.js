@@ -4,9 +4,85 @@ import axiosInstance from '../../UTILS/axiosInstance';
 class ProjectService {
     // Get all projects with filters and pagination
     async getAllProjects(params = {}) {
-        const queryString = new URLSearchParams(params).toString();
-        const response = await axiosInstance.get(`/api/v1/project?${queryString}`);
-        return response.data;
+        try {
+            // Process the params
+            const processedParams = { ...params };
+
+            // Always include all statuses by default, unless explicitly set otherwise
+            processedParams.includeAllStatuses = 'true';
+
+            // If getAll is true, set limit to match backend limit
+            if (processedParams.getAll) {
+                // Set limit to match backend hardcoded limit
+                processedParams.limit = 10;
+                console.log(`Setting limit to ${processedParams.limit} to match backend limit`);
+                delete processedParams.getAll;
+            }
+
+            // Extract filters
+            if (processedParams.filters) {
+                // Handle showAll flag - if it's explicitly set to false, don't include all statuses
+                if (processedParams.filters.showAll === false) {
+                    processedParams.includeAllStatuses = 'false';
+                    delete processedParams.filters.showAll;
+                }
+
+                // Extract categories if they exist
+                if (processedParams.filters.categories && processedParams.filters.categories.length > 0) {
+                    processedParams.categories = processedParams.filters.categories.join(',');
+                }
+
+                // Extract skills if they exist
+                if (processedParams.filters.skills && processedParams.filters.skills.length > 0) {
+                    processedParams.skills = processedParams.filters.skills.join(',');
+                }
+
+                // Extract experienceLevel if it exists
+                if (processedParams.filters.experience && processedParams.filters.experience.length > 0) {
+                    processedParams.experienceLevel = processedParams.filters.experience[0]; // Take first one
+                }
+
+                // Extract projectType if it exists
+                if (processedParams.filters.type && processedParams.filters.type.length > 0) {
+                    processedParams.projectType = processedParams.filters.type.join(',');
+                }
+
+                // Extract budget range if it exists
+                if (processedParams.filters.budget) {
+                    if (processedParams.filters.budget.min) {
+                        processedParams.budgetMin = processedParams.filters.budget.min;
+                    }
+                    if (processedParams.filters.budget.max) {
+                        processedParams.budgetMax = processedParams.filters.budget.max;
+                    }
+                }
+
+                // Extract location if it exists
+                if (processedParams.filters.location && processedParams.filters.location.length > 0) {
+                    processedParams.location = processedParams.filters.location.join(',');
+                }
+
+                // Extract search term
+                if (processedParams.filters.search) {
+                    processedParams.search = processedParams.filters.search;
+                }
+
+                // Remove the filters object as we've extracted everything
+                delete processedParams.filters;
+            }
+
+            // Add a flag to include application status for the current user
+            processedParams.includeApplicationStatus = true;
+
+            const queryString = new URLSearchParams(processedParams).toString();
+            console.log('Fetching projects with query:', queryString);
+
+            const response = await axiosInstance.get(`/api/v1/project?${queryString}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching projects:', error);
+            throw error;
+        }
     }
 
     // Get project details by ID or slug

@@ -5,8 +5,7 @@ const applicationSchema = new Schema({
         project: {
                 type: Schema.Types.ObjectId,
                 ref: 'Project',
-                required: [true, "Project reference is required"],
-                index: true
+                required: [true, "Project reference is required"]
         },
         freelancer: {
                 type: Schema.Types.ObjectId,

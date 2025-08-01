@@ -362,9 +362,6 @@ const ProjectDetailsPage = () => {
                                     <p className="text-sm text-gray-600">
                                         {currentProject.applicationsCount || 0} proposals
                                     </p>
-                                    <p className="text-sm text-gray-600">
-                                        {currentProject.likesCount || 0} likes
-                                    </p>
                                 </div>
                             </div>
 
@@ -500,11 +497,23 @@ const ProjectDetailsPage = () => {
 
                             <div className="flex items-center mb-4">
                                 <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <User className="h-6 w-6 text-blue-600" />
+                                    {currentProject.clientAvatar ? (
+                                        <img
+                                            src={currentProject.clientAvatar}
+                                            alt={currentProject.clientName || 'Client'}
+                                            className="h-12 w-12 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <User className="h-6 w-6 text-blue-600" />
+                                    )}
                                 </div>
                                 <div className="ml-4">
-                                    <h4 className="font-semibold text-gray-900">{currentProject.clientName}</h4>
-                                    <p className="text-sm text-gray-600">Client</p>
+                                    <h4 className="font-semibold text-gray-900">
+                                        {currentProject.clientName || 'Client'}
+                                    </h4>
+                                    <p className="text-sm text-gray-600">
+                                        {currentProject.clientLocation || 'Client'}
+                                    </p>
                                 </div>
                             </div>
 
@@ -520,11 +529,6 @@ const ProjectDetailsPage = () => {
                                     <span className="text-gray-600">Projects posted</span>
                                     <span className="font-medium">{currentProject.clientProjectsCount || 1}</span>
                                 </div>
-
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Total spent</span>
-                                    <span className="font-medium">{formatBudget(currentProject.clientTotalSpent || 0)}</span>
-                                </div>
                             </div>
                         </div>
 
@@ -535,18 +539,18 @@ const ProjectDetailsPage = () => {
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                        <Heart className="h-4 w-4 text-red-500 mr-2" />
-                                        <span className="text-sm text-gray-600">Likes</span>
+                                        <Clock className="h-4 w-4 text-blue-500 mr-2" />
+                                        <span className="text-sm text-gray-600">Posted</span>
                                     </div>
-                                    <span className="font-semibold">{currentProject.likesCount || 0}</span>
+                                    <span className="font-semibold">{getRelativeTime(currentProject.createdAt)}</span>
                                 </div>
 
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                        <ThumbsDown className="h-4 w-4 text-orange-500 mr-2" />
-                                        <span className="text-sm text-gray-600">Dislikes</span>
+                                        <User className="h-4 w-4 text-blue-500 mr-2" />
+                                        <span className="text-sm text-gray-600">Applications</span>
                                     </div>
-                                    <span className="font-semibold">{currentProject.dislikesCount || 0}</span>
+                                    <span className="font-semibold">{currentProject.applicationsCount || 0}</span>
                                 </div>
 
                                 <div className="flex items-center justify-between">
@@ -555,14 +559,6 @@ const ProjectDetailsPage = () => {
                                         <span className="text-sm text-gray-600">Bookmarks</span>
                                     </div>
                                     <span className="font-semibold">{currentProject.bookmarksCount || 0}</span>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center">
-                                        <Users className="h-4 w-4 text-green-500 mr-2" />
-                                        <span className="text-sm text-gray-600">Applications</span>
-                                    </div>
-                                    <span className="font-semibold">{currentProject.applicationsCount || 0}</span>
                                 </div>
                             </div>
                         </div>

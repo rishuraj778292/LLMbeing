@@ -3,8 +3,18 @@ import axiosInstance from '../../UTILS/axiosInstance';
 class ApplicationService {
     // Apply to project (Freelancer only)
     async applyToProject(projectId, applicationData) {
-        const response = await axiosInstance.post(`/api/v1/applications/apply/${projectId}`, applicationData);
-        return response.data;
+        try {
+            const response = await axiosInstance.post(`/api/v1/applications/apply/${projectId}`, applicationData);
+            return response.data;
+        } catch (error) {
+            // Extract the error message from the response
+            if (error.response && error.response.data) {
+                // If it's a structured error from our API
+                throw error.response.data;
+            }
+            // Otherwise, throw a generic error
+            throw new Error(error.message || 'Failed to submit application');
+        }
     }
 
     // Edit application (Freelancer only)
@@ -21,9 +31,16 @@ class ApplicationService {
 
     // Get user's applications (Freelancer only)
     async getUserApplications(params = {}) {
+        console.log('Calling getUserApplications with params:', params);
         const queryString = new URLSearchParams(params).toString();
-        const response = await axiosInstance.get(`/api/v1/applications/my-applications?${queryString}`);
-        return response.data;
+        try {
+            const response = await axiosInstance.get(`/api/v1/applications/my-applications?${queryString}`);
+            console.log('getUserApplications API response:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('getUserApplications API error:', error);
+            throw error;
+        }
     }
 
     // Submit project (Freelancer only)

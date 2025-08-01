@@ -2,17 +2,33 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Bell, ChevronDown, User, Settings, LogOut, Menu, X, MessageCircle, Briefcase, PlusCircle, FileText, Search } from 'lucide-react';
-import { logout } from '../../Redux/Slice/authSlice'
+import {
+    Menu,
+    X,
+    LogOut,
+    User,
+    Bell,
+    MessageCircle,
+    FileText,
+    Search,
+    Briefcase,
+    PlusCircle,
+    ChevronDown,
+    Settings,
+    Folder
+} from 'lucide-react';
+import { logout } from '../../Redux/Slice/authSlice';
+import { getNotifications, markAsRead, markAllAsRead } from '../../Redux/Slice/notificationSlice';
 
 const Navbar = ({ isAuthPage }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { user, isAuthenticated } = useSelector((state) => state.auth);
+    const { notifications, unreadCount } = useSelector((state) => state.notifications);
     const [isAccountPanelExpanded, setIsAccountPanelExpanded] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [notifications] = useState(0); // Mock notification count
-    const [searchQuery, setSearchQuery] = useState('');
+    const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Close panels when clicking outside
     useEffect(() => {
@@ -24,13 +40,23 @@ const Navbar = ({ isAuthPage }) => {
                 !event.target.closest('.hamburger')) {
                 setIsMobileMenuOpen(false);
             }
+            if (isNotificationPanelOpen && !event.target.closest('.notification-panel-container')) {
+                setIsNotificationPanelOpen(false);
+            }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isAccountPanelExpanded, isMobileMenuOpen]);
+    }, [isAccountPanelExpanded, isMobileMenuOpen, isNotificationPanelOpen]);
+
+    // Load notifications when user is authenticated
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            dispatch(getNotifications());
+        }
+    }, [dispatch, isAuthenticated, user]);
 
     const handleAccountPanel = () => {
         setIsAccountPanelExpanded(!isAccountPanelExpanded);
@@ -48,8 +74,8 @@ const Navbar = ({ isAuthPage }) => {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        if (searchQuery.trim()) {
-            navigate(`/projects?search=${encodeURIComponent(searchQuery.trim())}`);
+        if (searchTerm.trim()) {
+            navigate(`/projects?search=${encodeURIComponent(searchTerm.trim())}`);
         }
     };
 
@@ -68,6 +94,7 @@ const Navbar = ({ isAuthPage }) => {
             return [
                 { path: '/dashboard', label: 'Dashboard', icon: <FileText className="w-4 h-4" /> },
                 { path: '/post-project', label: 'Post Project', icon: <PlusCircle className="w-4 h-4" /> },
+                { path: '/my-projects', label: 'My Projects', icon: <Folder className="w-4 h-4" /> },
                 { path: '/manage-projects', label: 'Manage Projects', icon: <Briefcase className="w-4 h-4" /> },
                 { path: '/messages', label: 'Messages', icon: <MessageCircle className="w-4 h-4" /> }
             ];
@@ -155,8 +182,8 @@ const Navbar = ({ isAuthPage }) => {
                                                     </div>
                                                     <input
                                                         type="text"
-                                                        value={searchQuery}
-                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                        value={searchTerm}
+                                                        onChange={(e) => setSearchTerm(e.target.value)}
                                                         placeholder="Search projects..."
                                                         className="block w-64 pl-10 pr-20 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:placeholder-slate-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                                     />
@@ -170,14 +197,83 @@ const Navbar = ({ isAuthPage }) => {
                                             )}
 
                                             {/* Notifications */}
-                                            <button className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer">
-                                                <Bell className="w-5 h-5" />
-                                                {notifications > 0 && (
-                                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                                                        {notifications > 9 ? '9+' : notifications}
-                                                    </span>
+                                            <div className="relative notification-panel-container">
+                                                <button
+                                                    onClick={() => setIsNotificationPanelOpen(!isNotificationPanelOpen)}
+                                                    className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                                                >
+                                                    <Bell className="w-5 h-5" />
+                                                    {unreadCount > 0 && (
+                                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                                        </span>
+                                                    )}
+                                                </button>
+
+                                                {/* Notification Dropdown */}
+                                                {isNotificationPanelOpen && (
+                                                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
+                                                        <div className="p-4 border-b border-slate-200">
+                                                            <div className="flex items-center justify-between">
+                                                                <h3 className="font-semibold text-slate-900">Notifications</h3>
+                                                                {unreadCount > 0 && (
+                                                                    <button
+                                                                        onClick={() => dispatch(markAllAsRead())}
+                                                                        className="text-sm text-blue-600 hover:text-blue-700 cursor-pointer"
+                                                                    >
+                                                                        Mark all read
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="max-h-96 overflow-y-auto">
+                                                            {notifications.length === 0 ? (
+                                                                <div className="p-4 text-center text-slate-500">
+                                                                    <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                                                                    <p>No notifications yet</p>
+                                                                </div>
+                                                            ) : (
+                                                                notifications.slice(0, 10).map((notification) => (
+                                                                    <div
+                                                                        key={notification._id}
+                                                                        onClick={() => {
+                                                                            if (!notification.isRead) {
+                                                                                dispatch(markAsRead(notification._id));
+                                                                            }
+                                                                            // Navigate to related item if applicable
+                                                                            if (notification.relatedChatRoom) {
+                                                                                navigate('/messages', {
+                                                                                    state: { selectedChatId: notification.relatedChatRoom }
+                                                                                });
+                                                                                setIsNotificationPanelOpen(false);
+                                                                            }
+                                                                        }}
+                                                                        className={`p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-blue-50' : ''
+                                                                            }`}
+                                                                    >
+                                                                        <div className="flex items-start space-x-3">
+                                                                            <div className={`w-2 h-2 rounded-full mt-2 ${!notification.isRead ? 'bg-blue-500' : 'bg-transparent'
+                                                                                }`} />
+                                                                            <div className="flex-1">
+                                                                                <h4 className="font-medium text-slate-900 text-sm">
+                                                                                    {notification.title}
+                                                                                </h4>
+                                                                                <p className="text-slate-600 text-sm mt-1">
+                                                                                    {notification.message}
+                                                                                </p>
+                                                                                <p className="text-slate-400 text-xs mt-2">
+                                                                                    {new Date(notification.createdAt).toLocaleString()}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ))
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 )}
-                                            </button>
+                                            </div>
 
                                             {/* User Account Dropdown */}
                                             <div className="relative account-panel-container">
@@ -328,8 +424,8 @@ const Navbar = ({ isAuthPage }) => {
                                             </div>
                                             <input
                                                 type="text"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
                                                 placeholder="Search projects..."
                                                 className="block w-full pl-10 pr-20 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:placeholder-slate-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                             />

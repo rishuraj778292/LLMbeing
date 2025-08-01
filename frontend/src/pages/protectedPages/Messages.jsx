@@ -1,9 +1,41 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useLocation } from 'react-router-dom';
+import {
+  getChatRooms,
+  getChatRoomDetails,
+  getUnreadMessageCounts,
+  resetPagination,
+  clearMessages
+} from '../../../Redux/Slice/messageSlice';
+import {
+  joinChatRoom,
+  leaveChatRoom,
+  sendMessage as socketSendMessage,
+  markMessagesAsRead,
+  sendTypingIndicator,
+  requestUserStatuses,
+  updateOnlineStatus
+} from '../../services/socketService';
 import { Send, MoreVertical, Paperclip, Smile, Search, ArrowLeft, Circle, CheckCheck, Clock, Image, FileText, Info, Plus, Filter, Briefcase, MessageCircle, Users } from 'lucide-react';
 
 const Messages = () => {
+  const dispatch = useDispatch();
+  const location = useLocation();
   const { user } = useSelector((state) => state.auth);
+  const {
+    chatRooms,
+    currentChatRoom,
+    messages,
+    loading,
+    unreadCounts,
+    totalUnread,
+    typingUsers,
+    userStatuses,
+    page,
+    hasMore
+  } = useSelector((state) => state.messages);
+
   const [selectedChat, setSelectedChat] = useState(null);
   const [message, setMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -11,13 +43,17 @@ const Messages = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showFileOptions, setShowFileOptions] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all'); // all, unread, active
-  const [isTyping] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [loadingError, setLoadingError] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   // Mock data for chats - will be replaced with Redux/API calls
-  const [chats] = useState([
+  const [chats, setChats] = useState([
     // Empty array to show no messages state
   ]);
 
@@ -28,30 +64,195 @@ const Messages = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Initialize socket connection and fetch chat rooms
+  useEffect(() => {
+    // Fetch chat rooms and unread counts when component mounts
+    dispatch(getChatRooms());
+    dispatch(getUnreadMessageCounts());
+
+    // Update user's online status
+    updateOnlineStatus(true);
+
+    // Clean up on unmount
+    return () => {
+      dispatch(clearMessages());
+      updateOnlineStatus(false);
+    };
+  }, [dispatch]);
+
+  // Handle chat selection - Initial setup and API call
+  useEffect(() => {
+    if (selectedChat) {
+      const roomId = selectedChat.id;
+
+      // Reset pagination and fetch messages
+      dispatch(resetPagination());
+      setLoadingError(false);
+
+      // Add error handling for the chat room details request
+      dispatch(getChatRoomDetails({ roomId, page: 1, limit: 10 }))
+        .unwrap()
+        .catch(error => {
+          console.error('Error loading messages:', error);
+          setLoadingError(true);
+        });
+
+      // Join socket room and mark messages as read
+      joinChatRoom(roomId);
+      markMessagesAsRead(roomId);
+
+      // Leave room on cleanup
+      return () => {
+        leaveChatRoom(roomId);
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, selectedChat?.id]); // Only depend on the ID, not the whole object
+
+  // Update UI with messages from Redux - Separate effect to avoid infinite loop
+  useEffect(() => {
+    if (selectedChat && currentChatRoom && messages && messages.length > 0) {
+      // Only update local state when messages actually change
+      const updatedChat = {
+        ...selectedChat,
+        messages: messages.map(msg => ({
+          id: msg._id,
+          sender: msg.sender._id === user._id ? 'me' : msg.sender._id,
+          senderName: msg.sender.userName,
+          senderImage: msg.sender.profileImage,
+          message: msg.content,
+          time: new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          status: msg.status,
+          timestamp: new Date(msg.createdAt).getTime(),
+          replyTo: msg.replyTo ? {
+            id: msg.replyTo._id,
+            message: msg.replyTo.content,
+            sender: msg.replyTo.sender._id === user._id ? 'me' : msg.replyTo.sender._id
+          } : null
+        }))
+      };
+      setSelectedChat(updatedChat);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentChatRoom?._id, messages, user._id]);
+
+  // Update chatrooms list when Redux state changes and handle initial chat selection
+  useEffect(() => {
+    if (chatRooms.length > 0) {
+      // Get all participant IDs to request their online status
+      const participantIds = chatRooms.flatMap(room =>
+        room.participants.filter(p => p._id !== user._id).map(p => p._id)
+      );
+
+      if (participantIds.length > 0) {
+        requestUserStatuses(participantIds);
+      }
+
+      const formattedChats = chatRooms.map(room => {
+        // Find the other participant
+        const otherParticipant = room.participants.find(p => p._id !== user._id);
+        const userStatus = userStatuses[otherParticipant?._id];
+        const isOnline = userStatus?.online || false;
+        const lastActivity = room.lastActivity ? new Date(room.lastActivity) : new Date();
+
+        return {
+          id: room._id,
+          name: otherParticipant?.userName || 'Unknown User',
+          avatar: otherParticipant?.profileImage || '/src/assets/user_icon.png',
+          role: otherParticipant?.role || 'User',
+          lastMessage: room.lastMessage?.content || 'No messages yet',
+          lastMessageTime: room.lastMessage ? new Date(room.lastActivity).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          lastSeen: isOnline ? 'Online now' : `${Math.floor((new Date() - lastActivity) / (1000 * 60))} min ago`,
+          unreadCount: unreadCounts[room._id] || 0,
+          online: isOnline,
+          projectTitle: room.project?.title || 'Direct Message',
+          projectId: room.project?._id,
+          messages: []
+        };
+      });
+
+      setChats(formattedChats);
+
+      // Check if we need to select a specific chat from navigation
+      const selectedChatId = location.state?.selectedChatId;
+      if (selectedChatId && !selectedChat) {
+        const chatToSelect = formattedChats.find(chat => chat.id === selectedChatId);
+        if (chatToSelect) {
+          setSelectedChat(chatToSelect);
+          setShowMobileChat(true); // Show the chat on mobile
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatRooms, unreadCounts, userStatuses, user._id]);
+
+  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [selectedChat?.messages]);
 
+  // Handle typing indicator
+  const handleTyping = () => {
+    if (!isTyping && selectedChat) {
+      setIsTyping(true);
+      sendTypingIndicator(selectedChat.id, true);
+    }
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set new timeout
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      if (selectedChat) {
+        sendTypingIndicator(selectedChat.id, false);
+      }
+    }, 3000);
+  };
+
   const handleSendMessage = async () => {
     if (message.trim() && selectedChat) {
+      // Create new message object for UI
       const newMessage = {
-        id: selectedChat.messages.length + 1,
+        id: Date.now().toString(),
         sender: 'me',
         message: message.trim(),
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         status: 'sent',
-        timestamp: new Date().getTime()
+        timestamp: new Date().getTime(),
+        replyTo: replyTo ? {
+          id: replyTo.id,
+          message: replyTo.message,
+          sender: replyTo.sender
+        } : null
       };
 
       try {
-        // TODO: Replace with actual API call
-        // const response = await sendMessage(selectedChat.id, newMessage);
-        console.log('Sending message:', newMessage);
+        // Send via socket for real-time update
+        socketSendMessage(selectedChat.id, message.trim(), replyTo?.id);
 
-        // Update local state (will be replaced with Redux)
-        selectedChat.messages.push(newMessage);
+        // Update local state immediately for better UX
+        setSelectedChat(prev => ({
+          ...prev,
+          messages: [...prev.messages, newMessage]
+        }));
+
+        // Clear input, reply, and emoji picker
         setMessage('');
+        setReplyTo(null);
         setShowEmojiPicker(false);
+
+        // Stop typing indicator
+        setIsTyping(false);
+        sendTypingIndicator(selectedChat.id, false);
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+
+        // Scroll to bottom
+        scrollToBottom();
       } catch (error) {
         console.error('Failed to send message:', error);
         // Show error notification
@@ -72,19 +273,20 @@ const Messages = () => {
     const file = event.target.files[0];
     if (file && selectedChat) {
       try {
-        // TODO: Replace with actual file upload API
-        // const formData = new FormData();
-        // formData.append('file', file);
-        // formData.append('chatId', selectedChat.id);
-        // const response = await uploadFile(formData);
+        // TODO: Replace with actual file upload API when backend supports it
+        // For now, just send a message with the file name
 
-        console.log(`Selected ${type}:`, file.name);
+        // Create file message content
+        const fileContent = `📎 ${file.name} (${type === 'image' ? 'Image' : 'File'})`;
 
-        // Create file message
+        // Send via socket
+        socketSendMessage(selectedChat.id, fileContent, null);
+
+        // Create local message for immediate display
         const fileMessage = {
-          id: selectedChat.messages.length + 1,
+          id: Date.now().toString(),
           sender: 'me',
-          message: `📎 ${file.name}`,
+          message: fileContent,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: 'sent',
           timestamp: new Date().getTime(),
@@ -92,8 +294,17 @@ const Messages = () => {
           fileName: file.name
         };
 
-        selectedChat.messages.push(fileMessage);
+        // Update local state
+        setSelectedChat(prev => ({
+          ...prev,
+          messages: [...prev.messages, fileMessage]
+        }));
+
+        // Reset file input
         event.target.value = '';
+
+        // Scroll to bottom
+        scrollToBottom();
       } catch (error) {
         console.error('Failed to upload file:', error);
       }
@@ -102,6 +313,22 @@ const Messages = () => {
 
   const handleEmojiClick = (emoji) => {
     setMessage(prev => prev + emoji);
+    // Focus the input after adding emoji
+    document.querySelector('.message-input')?.focus();
+  };
+
+  const handleReply = (msg) => {
+    setReplyTo({
+      id: msg.id,
+      message: msg.message,
+      sender: msg.sender
+    });
+    // Focus the input after setting reply
+    document.querySelector('.message-input')?.focus();
+  };
+
+  const cancelReply = () => {
+    setReplyTo(null);
   };
 
   const getStatusIcon = (status) => {
@@ -117,10 +344,45 @@ const Messages = () => {
     }
   };
 
-  const filteredChats = chats.filter(chat =>
-    chat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    chat.projectTitle.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Apply filters to chats
+  const getFilteredChats = () => {
+    let filtered = chats;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(chat =>
+        chat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        chat.projectTitle.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply type filter
+    switch (activeFilter) {
+      case 'unread':
+        filtered = filtered.filter(chat => chat.unreadCount > 0);
+        break;
+      case 'active':
+        filtered = filtered.filter(chat => chat.lastMessageTime); // Has at least one message
+        break;
+      default:
+        // 'all' - no additional filtering
+        break;
+    }
+
+    return filtered;
+  };
+
+  const filteredChats = getFilteredChats();
+
+  // Check for typing users in the selected chat
+  const isPartnerTyping = () => {
+    if (!selectedChat || !typingUsers || !typingUsers[selectedChat.id]) {
+      return false;
+    }
+
+    // Check if any typing user is not the current user
+    return typingUsers[selectedChat.id].some(typingUserId => typingUserId !== user._id);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
@@ -166,12 +428,35 @@ const Messages = () => {
                       <MessageCircle className="w-10 h-10 text-gray-400" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No conversations yet</h3>
-                    <p className="text-gray-500 mb-6">
+                    <p className="text-gray-500 mb-4">
                       {user?.role === 'freelancer'
                         ? 'Start connecting with clients by applying to projects.'
-                        : 'Start connecting with freelancers by posting projects.'
+                        : 'Start connecting with freelancers by posting projects or clicking the "Message Freelancer" button in your applications.'
                       }
                     </p>
+                    <div className="flex justify-center gap-4 mb-6">
+                      {user?.role === 'freelancer' ? (
+                        <button
+                          onClick={() => window.location.href = '/find-projects'}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                        >
+                          Find Projects
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => window.location.href = '/post-project'}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                        >
+                          Post a Project
+                        </button>
+                      )}
+                      <button
+                        onClick={() => window.location.href = '/manage-applications'}
+                        className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm"
+                      >
+                        View Applications
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
@@ -181,6 +466,11 @@ const Messages = () => {
                         onClick={() => {
                           setSelectedChat(chat);
                           setShowMobileChat(true);
+
+                          // Mark messages as read when selecting a chat
+                          if (chat.unreadCount > 0) {
+                            markMessagesAsRead(chat.id);
+                          }
                         }}
                         className={`p-6 cursor-pointer transition-all hover:bg-gray-50 ${selectedChat?.id === chat.id ? 'bg-blue-50 border-r-4 border-blue-600' : ''
                           }`}
@@ -200,29 +490,30 @@ const Messages = () => {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
                               <h3 className="font-semibold text-gray-900 truncate">{chat.name}</h3>
-                              <span className="text-sm text-gray-500">{chat.time}</span>
+                              <span className="text-sm text-gray-500">{chat.lastMessageTime}</span>
                             </div>
 
                             <div className="flex items-center space-x-2 mb-2">
-                              <span className="text-sm text-blue-600 font-medium">{chat.role}</span>
-                              <div className="flex items-center space-x-1">
-                                {[...Array(5)].map((_, i) => (
-                                  <div key={i} className={`w-2 h-2 rounded-full ${i < Math.floor(chat.rating) ? 'bg-yellow-400' : 'bg-gray-300'}`}></div>
-                                ))}
-                                <span className="text-sm text-gray-500 ml-1">{chat.rating}</span>
-                              </div>
+                              <span className={`text-sm font-medium capitalize ${chat.role === 'freelancer' ? 'text-green-600' :
+                                chat.role === 'client' ? 'text-blue-600' : 'text-gray-600'
+                                }`}>
+                                {chat.role}
+                              </span>
+                              <span className="text-gray-300">•</span>
+                              <span className={`text-sm ${chat.online ? 'text-green-600' : 'text-gray-500'}`}>
+                                {chat.online ? 'Online' : `Last seen ${chat.lastSeen}`}
+                              </span>
                             </div>
 
                             <div className="bg-gray-50 rounded-lg p-3 mb-2">
                               <h4 className="font-medium text-gray-900 text-sm mb-1">{chat.projectTitle}</h4>
-                              <span className="text-green-600 font-semibold text-sm">{chat.projectBudget}</span>
                             </div>
 
                             <div className="flex items-center justify-between">
                               <p className="text-gray-600 text-sm truncate flex-1 mr-2">{chat.lastMessage}</p>
-                              {chat.unread > 0 && (
+                              {chat.unreadCount > 0 && (
                                 <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                                  {chat.unread}
+                                  {chat.unreadCount}
                                 </span>
                               )}
                             </div>
@@ -265,13 +556,18 @@ const Messages = () => {
                       <div>
                         <h2 className="text-xl font-semibold text-gray-900">{selectedChat.name}</h2>
                         <div className="flex items-center space-x-3 text-sm text-gray-500">
-                          <span className="text-blue-600 font-medium">{selectedChat.role}</span>
+                          <span className={`font-medium capitalize ${selectedChat.role === 'freelancer' ? 'text-green-600' :
+                            selectedChat.role === 'client' ? 'text-blue-600' : 'text-gray-600'
+                            }`}>
+                            {selectedChat.role}
+                          </span>
                           <span>•</span>
-                          <span>{selectedChat.online ? 'Online now' : `Last seen ${selectedChat.lastSeen}`}</span>
+                          <span className={selectedChat.online ? 'text-green-600' : 'text-gray-500'}>
+                            {selectedChat.online ? 'Online now' : `Last seen ${selectedChat.lastSeen}`}
+                          </span>
                         </div>
                         <div className="mt-2 bg-gray-50 rounded-lg px-3 py-2 inline-block">
                           <span className="text-sm font-medium text-gray-900">{selectedChat.projectTitle}</span>
-                          <span className="text-green-600 font-semibold text-sm ml-2">{selectedChat.projectBudget}</span>
                         </div>
                       </div>
                     </div>
@@ -288,7 +584,39 @@ const Messages = () => {
                 </div>
 
                 {/* Messages Area */}
-                <div className="h-[500px] overflow-y-auto p-6 bg-gray-50">
+                <div className="h-[500px] overflow-y-auto p-6 bg-gray-50" ref={messagesContainerRef}>
+                  {loading && (
+                    <div className="flex justify-center items-center h-20">
+                      <div className="flex space-x-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {loadingError && (
+                    <div className="flex flex-col items-center justify-center h-20 bg-red-50 p-4 rounded-lg border border-red-200 my-4">
+                      <p className="text-red-600 mb-2">There was an error loading messages</p>
+                      <button
+                        onClick={() => {
+                          setLoadingError(false);
+                          if (selectedChat) {
+                            dispatch(getChatRoomDetails({ roomId: selectedChat.id, page: 1, limit: 5 }))
+                              .unwrap()
+                              .catch(error => {
+                                console.error('Error reloading messages:', error);
+                                setLoadingError(true);
+                              });
+                          }
+                        }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                      >
+                        Try Again (Minimal Messages)
+                      </button>
+                    </div>
+                  )}
+
                   {selectedChat.messages && selectedChat.messages.length > 0 ? (
                     <div className="space-y-6">
                       {selectedChat.messages.map((msg) => (
@@ -303,6 +631,21 @@ const Messages = () => {
                                 : 'bg-white text-gray-900 border border-gray-200'
                                 }`}
                             >
+                              {/* Reply reference */}
+                              {msg.replyTo && (
+                                <div className={`mb-2 p-2 rounded-lg text-xs border-l-2 ${msg.sender === 'me'
+                                  ? 'bg-blue-700 border-blue-300'
+                                  : 'bg-gray-100 border-gray-300'
+                                  }`}>
+                                  <p className="font-medium mb-1">
+                                    {msg.replyTo.sender === 'me'
+                                      ? (msg.sender === 'me' ? 'You replied to yourself' : `You`)
+                                      : (msg.sender === 'me' ? `Replying to ${selectedChat.name}` : `${selectedChat.name} replied to you`)}
+                                  </p>
+                                  <p className="truncate">{msg.replyTo.message}</p>
+                                </div>
+                              )}
+
                               <p className="leading-relaxed">{msg.message}</p>
                               <div className={`flex items-center justify-between mt-3 space-x-2`}>
                                 <span className={`text-xs ${msg.sender === 'me' ? 'text-blue-100' : 'text-gray-500'}`}>
@@ -315,11 +658,21 @@ const Messages = () => {
                                 )}
                               </div>
                             </div>
+
+                            {/* Message Actions */}
+                            <div className={`mt-2 flex justify-${msg.sender === 'me' ? 'end' : 'start'}`}>
+                              <button
+                                onClick={() => handleReply(msg)}
+                                className="text-xs text-gray-500 hover:text-gray-700 hover:underline"
+                              >
+                                Reply
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
 
-                      {isTyping && (
+                      {isPartnerTyping() && (
                         <div className="flex justify-start">
                           <div className="bg-white px-5 py-4 rounded-2xl shadow-sm border border-gray-200">
                             <div className="flex space-x-1">
@@ -424,14 +777,33 @@ const Messages = () => {
                         <Paperclip className="w-5 h-5" />
                       </button>
 
+                      {/* Reply UI */}
+                      {replyTo && (
+                        <div className="absolute -top-16 left-0 right-0 bg-gray-100 border-t border-gray-200 p-3 rounded-t-xl flex justify-between items-center">
+                          <div className="flex-1 overflow-hidden">
+                            <p className="text-xs text-gray-500">
+                              Replying to {replyTo.sender === 'me' ? 'yourself' : selectedChat.name}
+                            </p>
+                            <p className="text-sm text-gray-700 truncate">{replyTo.message}</p>
+                          </div>
+                          <button
+                            onClick={cancelReply}
+                            className="text-gray-400 hover:text-gray-600 p-1"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+
                       <div className="flex-1 relative">
                         <input
                           type="text"
                           value={message}
                           onChange={(e) => setMessage(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                          placeholder="Type your message..."
-                          className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-14"
+                          onInput={handleTyping}
+                          placeholder={isPartnerTyping() ? `${selectedChat.name} is typing...` : "Type your message..."}
+                          className="message-input w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-14"
                         />
                         <button
                           onClick={() => {
@@ -460,9 +832,37 @@ const Messages = () => {
                 <div className="p-12 text-center">
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mx-auto mb-6"></div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Messages</h3>
-                  <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                    Connect and collaborate with talented freelancers. Select a conversation from the sidebar to start chatting.
-                  </p>
+
+                  {chats.length === 0 ? (
+                    <div>
+                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                        You don't have any conversations yet. Start by {user?.role === 'freelancer'
+                          ? 'applying to projects'
+                          : 'reaching out to freelancers who applied to your projects'}.
+                      </p>
+                      <div className="flex justify-center gap-4 mb-8">
+                        {user?.role === 'freelancer' ? (
+                          <button
+                            onClick={() => window.location.href = '/find-projects'}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                          >
+                            Browse Projects
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => window.location.href = '/manage-applications'}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                          >
+                            Manage Applications
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                      Connect and collaborate with talented freelancers. Select a conversation from the sidebar to start chatting.
+                    </p>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
                     <div className="text-center p-4 bg-gray-50 rounded-xl">

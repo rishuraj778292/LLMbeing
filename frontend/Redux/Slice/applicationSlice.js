@@ -35,7 +35,7 @@ export const withdrawApplication = createAsyncThunk(
     async (applicationId, { rejectWithValue }) => {
         try {
             const response = await applicationService.withdrawApplication(applicationId);
-            return { applicationId, ...response };
+            return { ...response, applicationId }; // Include applicationId in the response
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }
@@ -142,6 +142,7 @@ const initialState = {
     loading: false,
     error: null,
     success: null,
+    lastInteraction: null,
     pagination: {
         total: 0,
         page: 1,
@@ -185,6 +186,13 @@ const applicationSlice = createSlice({
                 if (projectId && !state.appliedProjectIds.includes(projectId)) {
                     state.appliedProjectIds.push(projectId);
                 }
+
+                // Store projectId for potential use by other components
+                state.lastInteraction = {
+                    projectId,
+                    type: 'apply',
+                    timestamp: Date.now()
+                };
             })
             .addCase(applyToProject.rejected, (state, action) => {
                 state.loading = false;
@@ -247,12 +255,61 @@ const applicationSlice = createSlice({
             })
             .addCase(getUserApplications.fulfilled, (state, action) => {
                 state.loading = false;
-                const data = action.payload.data || action.payload || [];
-                state.userApplications = Array.isArray(data) ? data : [];
-                state.appliedProjectIds = Array.isArray(data)
-                    ? data.map(app => app.project?._id || app.project).filter(Boolean)
-                    : [];
-                state.pagination = action.payload.pagination || state.pagination;
+
+                // The API might return data in different formats
+                console.log('Processing getUserApplications response:', action.payload);
+
+                let applications = [];
+                let pagination = {};
+
+                // Format 1: { data: { applications: [], pagination: {} } }
+                if (action.payload?.data && action.payload.data.applications) {
+                    console.log('Format 1 detected');
+                    applications = action.payload.data.applications;
+                    pagination = action.payload.data.pagination || {};
+                }
+                // Format 2: { applications: [], pagination: {} }
+                else if (action.payload?.applications) {
+                    console.log('Format 2 detected');
+                    applications = action.payload.applications;
+                    pagination = action.payload.pagination || {};
+                }
+                // Format 3: { data: [] }
+                else if (action.payload?.data && Array.isArray(action.payload.data)) {
+                    console.log('Format 3 detected');
+                    applications = action.payload.data;
+                }
+                // Format 4: Direct array []
+                else if (Array.isArray(action.payload)) {
+                    console.log('Format 4 detected');
+                    applications = action.payload;
+                }
+                // Format 5: Standard API response with data property
+                else if (action.payload && typeof action.payload === 'object') {
+                    console.log('Format 5 detected');
+                    applications = action.payload.data || [];
+                    pagination = action.payload.pagination || state.pagination;
+                }
+
+                console.log('Processed applications:', applications);
+
+                state.userApplications = applications;
+                // Format and deduplicate applied project IDs
+                const processedIds = applications
+                    .map(app => {
+                        // Handle different project reference formats
+                        if (!app.project) return null;
+                        if (typeof app.project === 'string') return app.project;
+                        if (app.project._id) return app.project._id;
+                        return null;
+                    })
+                    .filter(Boolean);
+
+                // Deduplicate IDs
+                state.appliedProjectIds = [...new Set(processedIds)];
+                state.pagination = pagination;
+
+                console.log('Updated appliedProjectIds:', state.appliedProjectIds);
             })
             .addCase(getUserApplications.rejected, (state, action) => {
                 state.loading = false;
@@ -345,9 +402,25 @@ const applicationSlice = createSlice({
             })
             .addCase(getClientApplications.fulfilled, (state, action) => {
                 state.loading = false;
-                const data = action.payload.data || action.payload || [];
-                state.clientApplications = Array.isArray(data) ? data : [];
-                state.pagination = action.payload.pagination || state.pagination;
+                // The API might return either { data: applications, pagination: {...} } 
+                // or directly { applications: [...], pagination: {...} }
+                let applications = [];
+                let pagination = {};
+
+                if (action.payload.data && action.payload.data.applications) {
+                    applications = action.payload.data.applications;
+                    pagination = action.payload.data.pagination || {};
+                } else if (action.payload.applications) {
+                    applications = action.payload.applications;
+                    pagination = action.payload.pagination || {};
+                } else if (Array.isArray(action.payload)) {
+                    applications = action.payload;
+                } else if (Array.isArray(action.payload.data)) {
+                    applications = action.payload.data;
+                }
+
+                state.clientApplications = applications;
+                state.pagination = pagination;
             })
             .addCase(getClientApplications.rejected, (state, action) => {
                 state.loading = false;

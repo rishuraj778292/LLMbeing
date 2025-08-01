@@ -29,6 +29,8 @@ import savedProjectRouter from './routes/savedProject.route.js';
 import likeProjectRouter from './routes/likeProject.route.js';
 import dislikeProjectRouter from './routes/dislikeProject.route.js';
 import dashboardRouter from './routes/dashboard.route.js';
+import messageRouter from './routes/message.route.js';
+import notificationRouter from './routes/notification.route.js';
 
 // routes decleration
 app.use("/api/v1/user", authRouter);
@@ -40,6 +42,8 @@ app.use("/api/v1/saved-projects", savedProjectRouter);
 app.use("/api/v1/liked-projects", likeProjectRouter);
 app.use("/api/v1/disliked-projects", dislikeProjectRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
+app.use("/api/v1/messages", messageRouter);
+app.use("/api/v1/notifications", notificationRouter);
 
 // error handling
 app.use(handleError)

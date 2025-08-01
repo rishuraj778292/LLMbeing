@@ -34,14 +34,14 @@ const apply = asyncHandler(async (req, res) => {
                         flaggedWords: contentValidation.flaggedWords
                 }]);
 
-                throw new ApiError(400, "Cover letter contains inappropriate content. Please review and modify your content to ensure it's professional and appropriate.");
+                throw new ApiError(400, "Cover letter contains inappropriate content. Please review and modify your content to ensure appropriate.");
         }
 
         // Find the project
         const project = await Project.findById(projectId);
         if (!project) throw new ApiError(404, "Project not found");
 
-        if (project.projectStatus !== 'active') {
+        if (project.isActive !== true) {
                 throw new ApiError(400, "Cannot apply to inactive projects");
         }
 
@@ -91,33 +91,42 @@ const apply = asyncHandler(async (req, res) => {
         }
 
         // Create application
-        const application = await Application.create({
-                project: projectId,
-                freelancer: applicantId,
-                proposedBudget: numericBudget,
-                expectedDelivery: numericDelivery,
-                coverLetter,
-                attachments: attachments || [],
-                status: 'pending',
-                appliedAt: new Date()
-        });
+        try {
+                const application = await Application.create({
+                        project: projectId,
+                        freelancer: applicantId,
+                        proposedBudget: numericBudget,
+                        expectedDelivery: numericDelivery,
+                        coverLetter,
+                        attachments: attachments || [],
+                        status: 'pending',
+                        appliedAt: new Date()
+                });
 
-        // Increment project application count
-        await Project.findByIdAndUpdate(projectId, {
-                $inc: { 'stats.applicationCount': 1 }
-        });
+                // Increment project application count
+                await Project.findByIdAndUpdate(projectId, {
+                        $inc: { 'stats.applicationCount': 1 }
+                });
 
-        // Add to user's applied projects array (hybrid storage)
-        await User.findByIdAndUpdate(applicantId, {
-                $addToSet: { appliedProjects: projectId }
-        });
+                // Add to user's applied projects array (hybrid storage)
+                await User.findByIdAndUpdate(applicantId, {
+                        $addToSet: { appliedProjects: projectId }
+                });
 
-        const populatedApplication = await Application.findById(application._id)
-                .populate('project', 'title budget client projectStatus slug')
-                .populate('freelancer', 'fullName email avatar')
-                .populate('project.client', 'fullName email avatar company');
+                const populatedApplication = await Application.findById(application._id)
+                        .populate('project', 'title budget client projectStatus slug')
+                        .populate('freelancer', 'fullName email avatar')
+                        .populate('project.client', 'fullName email avatar company');
 
-        res.status(201).send(new ApiResponse(201, populatedApplication, "Application submitted successfully"));
+                res.status(201).send(new ApiResponse(201, populatedApplication, "Application submitted successfully"));
+        } catch (error) {
+                // Check for MongoDB duplicate key error
+                if (error.code === 11000 && error.keyPattern && (error.keyPattern.project || error.keyPattern['project_1_freelancer_1'])) {
+                        throw new ApiError(400, "You have already applied to this project");
+                }
+                // Re-throw other errors
+                throw error;
+        }
 });
 
 // PUT: Edit application

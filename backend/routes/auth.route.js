@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, verifyEmailOTP, resendEmailOTP, login, verifyUser, refreshtoken, logoutUser, forgotPassword, verifyPasswordResetOTP, resetPassword, resetPasswordWithToken, checkUsernameAvailability } from "../controllers/auth.controller.js";
+import { register, verifyEmailOTP, resendEmailOTP, login, verifyUser, refreshtoken, logoutUser, forgotPassword, verifyPasswordResetOTP, resetPassword, resetPasswordWithToken, checkUsernameAvailability, getSocketToken } from "../controllers/auth.controller.js";
 import { registerValidator, forgotPasswordValidator, resetPasswordValidator, emailOTPValidator, passwordResetOTPValidator } from "../middleware/authValidator.middleware.js";
 import verifyToken from "../middleware/verifyToken.middleware.js";
 const router = Router();
@@ -11,6 +11,9 @@ router.route("/login").post(login);
 router.route("/verifyUser").get(verifyToken, verifyUser);
 router.route("/refreshtoken").get(refreshtoken);
 router.route("/logout").get(logoutUser);
+
+// Socket token endpoint (protected)
+router.route("/socket-token").get(verifyToken, getSocketToken);
 
 // Username availability check (public endpoint)
 router.route("/check-username/:username").get(checkUsernameAvailability);

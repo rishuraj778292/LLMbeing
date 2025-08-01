@@ -14,7 +14,7 @@ const createProject = asyncHandler(async (req, res) => {
   const projectData = {
     ...req.body,
     client: req.user._id,
-    projectStatus: 'draft' // Start as draft
+    projectStatus: 'active' // Start as draft
   };
 
   const project = await Project.create(projectData);
@@ -83,7 +83,8 @@ const getAllProjects = asyncHandler(async (req, res) => {
     budgetMin,
     budgetMax,
     location,
-    sortBy = 'newest'
+    sortBy = 'newest',
+    includeAllStatuses = 'false'  // Add parameter for showing all statuses
   } = req.query;
 
   page = parseInt(page);
@@ -91,9 +92,13 @@ const getAllProjects = asyncHandler(async (req, res) => {
 
   // Build filter object
   const filters = {
-    isActive: true,
-    projectStatus: 'active'
+    isActive: true  // Keep this to filter out deleted projects
   };
+
+  // Only apply projectStatus filter if not including all statuses
+  if (includeAllStatuses !== 'true') {
+    filters.projectStatus = 'active';
+  }
 
   if (search) {
     filters.$text = { $search: search };

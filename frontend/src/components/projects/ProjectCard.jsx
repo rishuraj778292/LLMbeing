@@ -1,61 +1,3 @@
-// import React from 'react'
-
-// const ProjectCard = React.forwardRef(({ project },ref) => {
-//   return (
-//     <div id={project.id} ref={ref} className='border border-gray-300 bg-gray-50 rounded-2xl p-5 '>
-//       <div>
-//         <p className='font-bold'>
-//           {project.title}
-//         </p>
-
-//       </div>
-
-//       <div>
-//         <p>
-//           budget : <span className='text-gray-400'>{project.budget}</span>
-//         </p>
-//       </div>
-
-
-//       <div>
-//         <p>
-//           Proposal : <span className='text-gray-400' >{project.proposal}</span>
-//         </p>
-//       </div>
-
-//       <div>
-//         <p className='text-gray-400'>
-//           {project.clientName}
-//         </p>
-//       </div>
-
-//       <div>
-//         <p>Location : <span className='text-gray-400'>{project.location}</span></p>
-//       </div>
-
-//       <div>
-//         <p className='text-gray-400'>{project.description}</p>
-//       </div>
-
-//       <div className='flex gap-3'>
-//         Skills required :         {project.skillsRequired.map(skill =>
-//         (
-//           <p className='text-gray-400'>{skill}</p>
-//         )
-//         )}
-//       </div>
-
-//       <div>
-//         <p>
-//           {project.postedAt}
-//         </p>
-//       </div>
-
-//     </div>
-//   )
-// })
-
-// export default ProjectCard
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -63,21 +5,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   Clock,
   MapPin,
-  Briefcase,
   User,
   Tag,
   DollarSign,
-  Heart,
   Bookmark,
-  ThumbsDown,
   Eye,
-  ExternalLink
 } from 'lucide-react';
-import {
-  toggleLike,
-  toggleDislike,
-  updateProjectInteraction
-} from '../../../Redux/Slice/projectSlice';
 import { toggleSaveProject } from '../../../Redux/Slice/savedProjectSlice';
 import { getCategoryLabel } from '../../utils/aiCategories';
 
@@ -86,6 +19,7 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { savedProjectIds, toggleLoading } = useSelector(state => state.savedProjects);
+  const { appliedProjectIds } = useSelector(state => state.applications);
 
   // Check if this project is saved
   const isSaved = savedProjectIds.includes(project._id);
@@ -182,48 +116,6 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
     }
   };
 
-  // Handle interaction functions
-  const handleLike = async (e) => {
-    e.stopPropagation();
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
-    // Optimistic update
-    dispatch(updateProjectInteraction({
-      projectId: project._id,
-      type: 'like',
-      isActive: !project.isLiked
-    }));
-
-    try {
-      await dispatch(toggleLike(project._id)).unwrap();
-    } catch {
-      console.error('Failed to toggle like');
-    }
-  };
-
-  const handleDislike = async (e) => {
-    e.stopPropagation();
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
-    // Optimistic update
-    dispatch(updateProjectInteraction({
-      projectId: project._id,
-      type: 'dislike',
-      isActive: !project.isDisliked
-    }));
-
-    try {
-      await dispatch(toggleDislike(project._id)).unwrap();
-    } catch {
-      console.error('Failed to toggle dislike');
-    }
-  };
 
   const handleBookmark = async (e) => {
     e.stopPropagation();
@@ -261,8 +153,32 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
   // Check if user is the project owner
   const isOwner = user && project.createdBy === user._id;
 
+  // Check if the user has already applied to this project
+  const hasApplied = React.useMemo(() => {
+    if (!user || user.role !== 'freelancer') return false;
+
+    // Check both the Redux appliedProjectIds array and the project's hasApplied flag
+    const applied = Boolean(
+      // Check if the project has the hasApplied flag set directly
+      project.hasApplied ||
+      // Also check the global appliedProjectIds array as a fallback
+      (appliedProjectIds && appliedProjectIds.includes(project._id))
+    );
+
+    // Log application status for debugging
+    if (applied) {
+      console.log(`Project ${project._id} (${project.title}) is marked as applied`, {
+        projectHasApplied: project.hasApplied,
+        inAppliedIds: appliedProjectIds && appliedProjectIds.includes(project._id)
+      });
+    }
+
+    return applied;
+  }, [project._id, project.title, project.hasApplied, user, appliedProjectIds]);
+
   // Show apply button only for freelancers and not project owners
-  const showApplyButton = user && user.role === 'freelancer' && !isOwner && !project.hasApplied;
+  const showApplyButton = user && user.role === 'freelancer' && !isOwner && !hasApplied;
+
 
   if (viewMode === 'list') {
     return (
@@ -327,51 +243,35 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
                 </span>
               ))}
               {project.skillsRequired && project.skillsRequired.length > 5 && (
-                <span className="text-xs text-gray-500">+{project.skillsRequired.length - 5} more</span>
+                <button className="text-xs text-gray-500 cursor-pointer" onClick={handleSeeDetails}>+{project.skillsRequired.length - 5}
+
+                  more</button>
               )}
             </div>
           </div>
 
-          {/* Right: Actions */}
-          <div className="flex flex-row lg:flex-col gap-2 lg:items-end">
-            <button
-              onClick={handleLike}
-              className={`flex items-center gap-2 transition-colors p-2 rounded-lg ${project.isLiked
-                ? 'text-red-500 bg-red-50'
-                : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
-                }`}
-            >
-              <Heart className={`w-4 h-4 ${project.isLiked ? 'fill-current' : ''}`} />
-              {project.likesCount > 0 && <span className="text-xs">{project.likesCount}</span>}
-            </button>
+          {/* Right: Actions - Bookmark on top, buttons on bottom */}
+          <div className="flex flex-col justify-between items-center lg:items-end h-full">
+            {/* Bookmark on top */}
+            <div>
+              {user?.role === 'freelancer' && (
+                <button
+                  onClick={handleBookmark}
+                  disabled={isToggleLoading}
+                  className={`flex items-center gap-2 transition-colors p-2 rounded-lg ${isSaved
+                    ? 'text-blue-500 bg-blue-50'
+                    : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'
+                    } ${isToggleLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={isSaved ? 'Remove from saved projects' : 'Save project'}
+                >
+                  <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
+                  {isToggleLoading && <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>}
+                </button>
+              )}
+            </div>
 
-            <button
-              onClick={handleDislike}
-              className={`flex items-center gap-2 transition-colors p-2 rounded-lg ${project.isDisliked
-                ? 'text-orange-500 bg-orange-50'
-                : 'text-gray-500 hover:text-orange-500 hover:bg-orange-50'
-                }`}
-            >
-              <ThumbsDown className={`w-4 h-4 ${project.isDisliked ? 'fill-current' : ''}`} />
-              {project.dislikesCount > 0 && <span className="text-xs">{project.dislikesCount}</span>}
-            </button>
-
-            {user?.role === 'freelancer' && (
-              <button
-                onClick={handleBookmark}
-                disabled={isToggleLoading}
-                className={`flex items-center gap-2 transition-colors p-2 rounded-lg ${isSaved
-                  ? 'text-blue-500 bg-blue-50'
-                  : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50'
-                  } ${isToggleLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                title={isSaved ? 'Remove from saved projects' : 'Save project'}
-              >
-                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                {isToggleLoading && <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></div>}
-              </button>
-            )}
-
-            <div className="flex gap-2">
+            {/* Action buttons on bottom */}
+            <div className="flex gap-2 mt-auto">
               <button
                 onClick={handleSeeDetails}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap flex items-center gap-2"
@@ -389,8 +289,11 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
                 </button>
               )}
 
-              {project.hasApplied && (
-                <span className="bg-green-100 text-green-700 text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap">
+              {hasApplied && (
+                <span className="bg-green-100 text-green-700 text-sm font-medium px-4 py-2 rounded-lg whitespace-nowrap flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
                   Applied
                 </span>
               )}
@@ -416,41 +319,19 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
           >
             {project.title}
           </h3>
-          <div className="flex gap-2">
+          {user?.role === 'freelancer' && (
             <button
-              onClick={handleLike}
-              className={`transition-colors p-1 ${project.isLiked
-                ? 'text-red-500'
-                : 'text-gray-400 hover:text-red-500'
-                }`}
+              onClick={handleBookmark}
+              disabled={isToggleLoading}
+              className={`transition-colors p-1 ${isSaved
+                ? 'text-blue-500'
+                : 'text-gray-400 hover:text-blue-500'
+                } ${isToggleLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={isSaved ? 'Remove from saved projects' : 'Save project'}
             >
-              <Heart className={`w-4 h-4 ${project.isLiked ? 'fill-current' : ''}`} />
+              <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
             </button>
-
-            <button
-              onClick={handleDislike}
-              className={`transition-colors p-1 ${project.isDisliked
-                ? 'text-orange-500'
-                : 'text-gray-400 hover:text-orange-500'
-                }`}
-            >
-              <ThumbsDown className={`w-4 h-4 ${project.isDisliked ? 'fill-current' : ''}`} />
-            </button>
-
-            {user?.role === 'freelancer' && (
-              <button
-                onClick={handleBookmark}
-                disabled={isToggleLoading}
-                className={`transition-colors p-1 ${isSaved
-                  ? 'text-blue-500'
-                  : 'text-gray-400 hover:text-blue-500'
-                  } ${isToggleLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                title={isSaved ? 'Remove from saved projects' : 'Save project'}
-              >
-                <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-              </button>
-            )}
-          </div>
+          )}
         </div>
 
         <div className="flex items-center bg-blue-50 px-3 py-1 rounded-full text-blue-600 font-medium w-fit">
@@ -473,12 +354,7 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
           {project.description || "No description provided"}
         </p>
 
-        {project.proposal && (
-          <div className="mb-4">
-            <div className="text-sm font-medium text-gray-700 mb-1">Proposal Requirements:</div>
-            <p className="text-sm text-gray-600 line-clamp-2">{project.proposal}</p>
-          </div>
-        )}
+
 
         {/* Categories section */}
         {project.projectCategory && project.projectCategory.length > 0 && (
@@ -516,14 +392,16 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
         </div>
       </div>
 
-      {/* Footer with posted time and action */}
-      <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 mt-auto flex justify-between items-center">
+      {/* Footer with posted time and action - Column layout */}
+      <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 mt-auto flex flex-col gap-2">
+        {/* Posted time */}
         <div className="flex items-center text-sm text-gray-500">
           <Clock className="h-4 w-4 mr-1 text-gray-400" />
           <span>{getRelativeTime(project.postedAt)}</span>
         </div>
 
-        <div className="flex gap-2">
+        {/* Action buttons */}
+        <div className="flex justify-between items-center">
           <button
             onClick={handleSeeDetails}
             className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg transition-colors flex items-center gap-1"
@@ -541,15 +419,17 @@ const ProjectCard = React.forwardRef(({ project, viewMode = 'grid' }, ref) => {
             </button>
           )}
 
-          {project.hasApplied && (
-            <span className="bg-green-100 text-green-700 text-sm font-medium px-3 py-2 rounded-lg">
+          {hasApplied && (
+            <span className="bg-green-100 text-green-700 text-sm font-medium px-3 py-2 rounded-lg flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
               Applied
             </span>
           )}
         </div>
       </div>
-    </div>
-  );
+    </div>);
 });
 
 export default ProjectCard;
